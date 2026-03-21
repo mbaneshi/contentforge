@@ -6,8 +6,10 @@ use contentforge_core::{
 };
 use contentforge_db::repo::{AdaptationRepo, ContentRepo, PlatformAccountRepo, PublicationRepo};
 use contentforge_db::DbPool;
+use contentforge_publish::adapters::bluesky::BlueskyPublisher;
 use contentforge_publish::adapters::devto::DevToPublisher;
 use contentforge_publish::adapters::linkedin::LinkedInPublisher;
+use contentforge_publish::adapters::mastodon::MastodonPublisher;
 use contentforge_publish::adapters::medium::MediumPublisher;
 use contentforge_publish::adapters::twitter::TwitterPublisher;
 use contentforge_publish::Publisher;
@@ -516,6 +518,20 @@ fn build_publisher(
             (Platform::Medium, PlatformCredential::IntegrationToken { token }) => {
                 Ok(Box::new(MediumPublisher::new(token)))
             }
+            (
+                Platform::Mastodon,
+                PlatformCredential::MastodonAuth {
+                    instance_url,
+                    access_token,
+                },
+            ) => Ok(Box::new(MastodonPublisher::new(instance_url, access_token))),
+            (
+                Platform::Bluesky,
+                PlatformCredential::BlueskyAuth {
+                    handle,
+                    app_password,
+                },
+            ) => Ok(Box::new(BlueskyPublisher::new(handle, app_password))),
             _ => bail!("Unsupported credential type for {platform}"),
         };
     }
@@ -536,6 +552,20 @@ fn build_publisher(
             let token = std::env::var("MEDIUM_TOKEN")
                 .context("Medium: Set MEDIUM_TOKEN env var or run: contentforge platforms add medium --key <token>")?;
             Ok(Box::new(MediumPublisher::new(token)))
+        }
+        Platform::Mastodon => {
+            let instance = std::env::var("MASTODON_INSTANCE")
+                .context("Mastodon: Set MASTODON_INSTANCE and MASTODON_TOKEN env vars")?;
+            let token = std::env::var("MASTODON_TOKEN")
+                .context("Mastodon: Set MASTODON_TOKEN env var")?;
+            Ok(Box::new(MastodonPublisher::new(instance, token)))
+        }
+        Platform::Bluesky => {
+            let handle = std::env::var("BLUESKY_HANDLE")
+                .context("Bluesky: Set BLUESKY_HANDLE and BLUESKY_APP_PASSWORD env vars")?;
+            let password = std::env::var("BLUESKY_APP_PASSWORD")
+                .context("Bluesky: Set BLUESKY_APP_PASSWORD env var")?;
+            Ok(Box::new(BlueskyPublisher::new(handle, password)))
         }
         _ => bail!(
             "Platform {platform} is not configured. Run: contentforge platforms add {platform_str} --key <key>",
@@ -599,6 +629,8 @@ async fn handle_platforms(action: PlatformAction, db: &DbPool) -> Result<()> {
                     PlatformCredential::OAuth2 { .. } => "oauth2",
                     PlatformCredential::IntegrationToken { .. } => "token",
                     PlatformCredential::Cookie { .. } => "cookie",
+                    PlatformCredential::MastodonAuth { .. } => "mastodon",
+                    PlatformCredential::BlueskyAuth { .. } => "bluesky",
                 };
                 println!(
                     "{:<12} {:<20} {:<10} {}",
@@ -628,6 +660,28 @@ async fn handle_platforms(action: PlatformAction, db: &DbPool) -> Result<()> {
                 },
                 Platform::Medium => PlatformCredential::IntegrationToken { token: key },
                 Platform::Substack => PlatformCredential::Cookie { value: key },
+                Platform::Mastodon => {
+                    // key format: "instance_url|access_token"
+                    let parts: Vec<&str> = key.splitn(2, '|').collect();
+                    if parts.len() != 2 {
+                        bail!("Mastodon: use --key 'https://mastodon.social|your_access_token'");
+                    }
+                    PlatformCredential::MastodonAuth {
+                        instance_url: parts[0].to_string(),
+                        access_token: parts[1].to_string(),
+                    }
+                }
+                Platform::Bluesky => {
+                    // key format: "handle|app_password"
+                    let parts: Vec<&str> = key.splitn(2, '|').collect();
+                    if parts.len() != 2 {
+                        bail!("Bluesky: use --key 'yourhandle.bsky.social|your_app_password'");
+                    }
+                    PlatformCredential::BlueskyAuth {
+                        handle: parts[0].to_string(),
+                        app_password: parts[1].to_string(),
+                    }
+                }
                 _ => PlatformCredential::ApiKey { key },
             };
 

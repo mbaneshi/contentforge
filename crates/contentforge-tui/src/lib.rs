@@ -858,6 +858,8 @@ fn credential_type_label(cred: &PlatformCredential) -> &'static str {
         PlatformCredential::OAuth2 { .. } => "OAuth2",
         PlatformCredential::IntegrationToken { .. } => "Token",
         PlatformCredential::Cookie { .. } => "Cookie",
+        PlatformCredential::MastodonAuth { .. } => "Mastodon",
+        PlatformCredential::BlueskyAuth { .. } => "Bluesky",
     }
 }
 

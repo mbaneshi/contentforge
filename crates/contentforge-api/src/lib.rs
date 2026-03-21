@@ -488,6 +488,8 @@ async fn list_platforms(State(state): State<AppState>) -> ApiResult<Vec<Platform
                 PlatformCredential::OAuth2 { .. } => "oauth2".to_string(),
                 PlatformCredential::IntegrationToken { .. } => "token".to_string(),
                 PlatformCredential::Cookie { .. } => "cookie".to_string(),
+                PlatformCredential::MastodonAuth { .. } => "mastodon".to_string(),
+                PlatformCredential::BlueskyAuth { .. } => "bluesky".to_string(),
             },
         })
         .collect();
