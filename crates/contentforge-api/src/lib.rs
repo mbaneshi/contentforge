@@ -132,10 +132,7 @@ async fn create_content(
     Json(serde_json::json!({ "status": "created" }))
 }
 
-async fn get_content(
-    State(_state): State<AppState>,
-    Path(_id): Path<Uuid>,
-) -> impl IntoResponse {
+async fn get_content(State(_state): State<AppState>, Path(_id): Path<Uuid>) -> impl IntoResponse {
     // TODO: fetch by id
     Json(serde_json::json!({ "content": null }))
 }
@@ -213,10 +210,7 @@ async fn analytics_dashboard(State(_state): State<AppState>) -> impl IntoRespons
 // WebSocket handler
 // ---------------------------------------------------------------------------
 
-async fn ws_handler(
-    State(state): State<AppState>,
-    ws: WebSocketUpgrade,
-) -> impl IntoResponse {
+async fn ws_handler(State(state): State<AppState>, ws: WebSocketUpgrade) -> impl IntoResponse {
     ws.on_upgrade(move |mut socket| async move {
         let mut rx = state.ws_tx.subscribe();
         while let Ok(msg) = rx.recv().await {

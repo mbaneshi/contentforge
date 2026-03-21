@@ -149,7 +149,11 @@ pub struct Publication {
 }
 
 impl Content {
-    pub fn new(title: impl Into<String>, body: impl Into<String>, content_type: ContentType) -> Self {
+    pub fn new(
+        title: impl Into<String>,
+        body: impl Into<String>,
+        content_type: ContentType,
+    ) -> Self {
         let now = Utc::now();
         Self {
             id: Uuid::new_v4(),

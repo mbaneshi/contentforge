@@ -58,11 +58,11 @@ impl Platform {
         match self {
             Self::Twitter => Some(280),
             Self::LinkedIn => Some(3000),
-            Self::DevTo => None,      // Markdown, no hard limit
-            Self::Medium => None,     // Long-form
+            Self::DevTo => None,         // Markdown, no hard limit
+            Self::Medium => None,        // Long-form
             Self::YouTube => Some(5000), // Description limit
             Self::Instagram => Some(2200),
-            Self::Substack => None,   // Long-form
+            Self::Substack => None, // Long-form
             Self::HackerNews => Some(2000),
             Self::Reddit => Some(40000),
         }
@@ -70,15 +70,22 @@ impl Platform {
 
     /// Whether the platform supports markdown natively.
     pub fn supports_markdown(&self) -> bool {
-        matches!(self, Self::DevTo | Self::Medium | Self::Substack | Self::Reddit)
+        matches!(
+            self,
+            Self::DevTo | Self::Medium | Self::Substack | Self::Reddit
+        )
     }
 
     /// Whether the platform supports image attachments.
     pub fn supports_images(&self) -> bool {
         matches!(
             self,
-            Self::Twitter | Self::LinkedIn | Self::DevTo | Self::Medium
-                | Self::Instagram | Self::Substack
+            Self::Twitter
+                | Self::LinkedIn
+                | Self::DevTo
+                | Self::Medium
+                | Self::Instagram
+                | Self::Substack
         )
     }
 

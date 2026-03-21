@@ -9,9 +9,7 @@ use crossterm::{
 };
 use ratatui::{
     prelude::*,
-    widgets::{
-        Block, Borders, Cell, Clear, List, ListItem, Paragraph, Row, Table, Tabs, Wrap,
-    },
+    widgets::{Block, Borders, Cell, Clear, List, ListItem, Paragraph, Row, Table, Tabs, Wrap},
 };
 
 use contentforge_core::{
@@ -34,17 +32,17 @@ const TICK_RATE_MS: u64 = 80;
 // Color palette
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-const ACCENT: Color = Color::Rgb(99, 102, 241);    // indigo
-const SUCCESS: Color = Color::Rgb(34, 197, 94);     // green
-const WARNING: Color = Color::Rgb(234, 179, 8);     // yellow
-const INFO: Color = Color::Rgb(59, 130, 246);       // blue
-const DANGER: Color = Color::Rgb(239, 68, 68);      // red
-const MUTED: Color = Color::Rgb(107, 114, 128);     // gray
-const SURFACE: Color = Color::Rgb(30, 30, 46);      // dark bg
-const SURFACE_HL: Color = Color::Rgb(45, 45, 65);   // highlight row
-const TEXT: Color = Color::Rgb(226, 232, 240);       // light text
-const TEXT_DIM: Color = Color::Rgb(148, 163, 184);   // dim text
-const BORDER: Color = Color::Rgb(63, 63, 80);       // border
+const ACCENT: Color = Color::Rgb(99, 102, 241); // indigo
+const SUCCESS: Color = Color::Rgb(34, 197, 94); // green
+const WARNING: Color = Color::Rgb(234, 179, 8); // yellow
+const INFO: Color = Color::Rgb(59, 130, 246); // blue
+const DANGER: Color = Color::Rgb(239, 68, 68); // red
+const MUTED: Color = Color::Rgb(107, 114, 128); // gray
+const SURFACE: Color = Color::Rgb(30, 30, 46); // dark bg
+const SURFACE_HL: Color = Color::Rgb(45, 45, 65); // highlight row
+const TEXT: Color = Color::Rgb(226, 232, 240); // light text
+const TEXT_DIM: Color = Color::Rgb(148, 163, 184); // dim text
+const BORDER: Color = Color::Rgb(63, 63, 80); // border
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // Tabs
@@ -80,11 +78,11 @@ impl Tab {
 
     fn icon(&self) -> &'static str {
         match self {
-            Tab::Dashboard => " \u{25a3} ",  // box
-            Tab::Drafts => " \u{270e} ",     // pencil
-            Tab::Adapt => " \u{2b82} ",      // arrows
-            Tab::Publish => " \u{2191} ",    // up arrow
-            Tab::Platforms => " \u{2630} ",  // trigram
+            Tab::Dashboard => " \u{25a3} ", // box
+            Tab::Drafts => " \u{270e} ",    // pencil
+            Tab::Adapt => " \u{2b82} ",     // arrows
+            Tab::Publish => " \u{2191} ",   // up arrow
+            Tab::Platforms => " \u{2630} ", // trigram
         }
     }
 
@@ -302,7 +300,9 @@ impl App {
             self.selected_content = None;
             return;
         }
-        let idx = self.selected_index.min(self.filtered_content.len().saturating_sub(1));
+        let idx = self
+            .selected_index
+            .min(self.filtered_content.len().saturating_sub(1));
         let id = self.filtered_content[idx].id;
         let repo = ContentRepo::new(self.db.clone());
         self.selected_content = repo.get_by_id_full(id).ok().flatten();
@@ -314,9 +314,7 @@ impl App {
         if let Ok(all) = repo.list_all() {
             self.publish_items = all
                 .into_iter()
-                .filter(|c| {
-                    matches!(c.status, ContentStatus::Ready | ContentStatus::Scheduled)
-                })
+                .filter(|c| matches!(c.status, ContentStatus::Ready | ContentStatus::Scheduled))
                 .map(|mut c| {
                     if let Ok(adaptations) = adapt_repo.list_for_content(c.id) {
                         c.adaptations = adaptations;
@@ -368,7 +366,9 @@ impl App {
         if self.filtered_content.is_empty() {
             return;
         }
-        let idx = self.selected_index.min(self.filtered_content.len().saturating_sub(1));
+        let idx = self
+            .selected_index
+            .min(self.filtered_content.len().saturating_sub(1));
         let content = &self.filtered_content[idx];
         let repo = ContentRepo::new(self.db.clone());
         match repo.delete(content.id) {
@@ -430,7 +430,9 @@ impl App {
         if self.publish_items.is_empty() {
             return;
         }
-        let idx = self.selected_index.min(self.publish_items.len().saturating_sub(1));
+        let idx = self
+            .selected_index
+            .min(self.publish_items.len().saturating_sub(1));
         let content = &self.publish_items[idx];
 
         if content.adaptations.is_empty() {
@@ -438,7 +440,9 @@ impl App {
             return;
         }
 
-        let pidx = self.publish_platform_idx.min(content.adaptations.len().saturating_sub(1));
+        let pidx = self
+            .publish_platform_idx
+            .min(content.adaptations.len().saturating_sub(1));
         let adaptation = &content.adaptations[pidx];
         let platform = adaptation.platform;
 
@@ -446,7 +450,11 @@ impl App {
             id: Uuid::new_v4(),
             content_id: content.id,
             platform,
-            url: format!("https://{}.example.com/{}", platform.to_string().to_lowercase().replace('/', "-"), &content.id.to_string()[..8]),
+            url: format!(
+                "https://{}.example.com/{}",
+                platform.to_string().to_lowercase().replace('/', "-"),
+                &content.id.to_string()[..8]
+            ),
             platform_post_id: Uuid::new_v4().to_string(),
             published_at: Utc::now(),
         };
@@ -526,11 +534,31 @@ impl App {
                 self.selected_index = 0;
                 self.data_dirty = true;
             }
-            KeyCode::Char('1') => { self.active_tab = Tab::Dashboard; self.selected_index = 0; self.data_dirty = true; }
-            KeyCode::Char('2') => { self.active_tab = Tab::Drafts; self.selected_index = 0; self.data_dirty = true; }
-            KeyCode::Char('3') => { self.active_tab = Tab::Adapt; self.selected_index = 0; self.data_dirty = true; }
-            KeyCode::Char('4') => { self.active_tab = Tab::Publish; self.selected_index = 0; self.data_dirty = true; }
-            KeyCode::Char('5') => { self.active_tab = Tab::Platforms; self.selected_index = 0; self.data_dirty = true; }
+            KeyCode::Char('1') => {
+                self.active_tab = Tab::Dashboard;
+                self.selected_index = 0;
+                self.data_dirty = true;
+            }
+            KeyCode::Char('2') => {
+                self.active_tab = Tab::Drafts;
+                self.selected_index = 0;
+                self.data_dirty = true;
+            }
+            KeyCode::Char('3') => {
+                self.active_tab = Tab::Adapt;
+                self.selected_index = 0;
+                self.data_dirty = true;
+            }
+            KeyCode::Char('4') => {
+                self.active_tab = Tab::Publish;
+                self.selected_index = 0;
+                self.data_dirty = true;
+            }
+            KeyCode::Char('5') => {
+                self.active_tab = Tab::Platforms;
+                self.selected_index = 0;
+                self.data_dirty = true;
+            }
             KeyCode::Char('j') | KeyCode::Down => self.move_down(),
             KeyCode::Char('k') | KeyCode::Up => self.move_up(),
             KeyCode::Char('?') => self.mode = Mode::Help,
@@ -603,12 +631,17 @@ impl App {
                 self.input_field = (self.input_field + 1) % 3;
             }
             KeyCode::BackTab => {
-                self.input_field = if self.input_field == 0 { 2 } else { self.input_field - 1 };
+                self.input_field = if self.input_field == 0 {
+                    2
+                } else {
+                    self.input_field - 1
+                };
             }
             KeyCode::Enter => {
                 if self.input_field == 2 {
                     // On type selector, Enter cycles through types
-                    self.content_type_idx = (self.content_type_idx + 1) % content_type_options().len();
+                    self.content_type_idx =
+                        (self.content_type_idx + 1) % content_type_options().len();
                 } else if self.input_field == 1 {
                     self.input_body.push('\n');
                 } else {
@@ -626,13 +659,15 @@ impl App {
                     _ => {}
                 }
             }
-            KeyCode::Backspace => {
-                match self.input_field {
-                    0 => { self.input_title.pop(); }
-                    1 => { self.input_body.pop(); }
-                    _ => {}
+            KeyCode::Backspace => match self.input_field {
+                0 => {
+                    self.input_title.pop();
                 }
-            }
+                1 => {
+                    self.input_body.pop();
+                }
+                _ => {}
+            },
             KeyCode::Left if self.input_field == 2 => {
                 if self.content_type_idx == 0 {
                     self.content_type_idx = content_type_options().len() - 1;
@@ -732,7 +767,9 @@ impl App {
                 self.mode = Mode::Normal;
             }
             KeyCode::Char('j') | KeyCode::Down => {
-                let len = self.publish_items.get(self.selected_index)
+                let len = self
+                    .publish_items
+                    .get(self.selected_index)
                     .map(|c| c.adaptations.len())
                     .unwrap_or(0);
                 if len > 0 && self.publish_platform_idx < len - 1 {
@@ -860,17 +897,14 @@ fn draw(frame: &mut Frame, app: &mut App) {
     let area = frame.area();
 
     // Overall background
-    frame.render_widget(
-        Block::default().style(Style::default().bg(SURFACE)),
-        area,
-    );
+    frame.render_widget(Block::default().style(Style::default().bg(SURFACE)), area);
 
     let outer = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Length(3), // top bar
             Constraint::Length(3), // tab bar
-            Constraint::Min(6),   // main content
+            Constraint::Min(6),    // main content
             Constraint::Length(1), // bottom bar
         ])
         .split(area);
@@ -907,7 +941,10 @@ fn draw_title_bar(frame: &mut Frame, app: &App, area: Rect) {
         .split(inner);
 
     let title = Paragraph::new(Line::from(vec![
-        Span::styled(" ContentForge ", Style::default().fg(ACCENT).add_modifier(Modifier::BOLD)),
+        Span::styled(
+            " ContentForge ",
+            Style::default().fg(ACCENT).add_modifier(Modifier::BOLD),
+        ),
         Span::styled(" \u{2502} ", Style::default().fg(BORDER)),
         Span::styled(
             format!("{}{}", app.active_tab.icon(), app.active_tab.title()),
@@ -917,14 +954,19 @@ fn draw_title_bar(frame: &mut Frame, app: &App, area: Rect) {
     frame.render_widget(title, layout[0]);
 
     let now = Utc::now().format("%Y-%m-%d %H:%M UTC");
-    let clock = Paragraph::new(
-        Span::styled(format!("{now} "), Style::default().fg(TEXT_DIM))
-    ).alignment(Alignment::Right);
+    let clock = Paragraph::new(Span::styled(
+        format!("{now} "),
+        Style::default().fg(TEXT_DIM),
+    ))
+    .alignment(Alignment::Right);
     frame.render_widget(clock, layout[1]);
 }
 
 fn draw_tab_bar(frame: &mut Frame, app: &App, area: Rect) {
-    let active_idx = Tab::ALL.iter().position(|t| *t == app.active_tab).unwrap_or(0);
+    let active_idx = Tab::ALL
+        .iter()
+        .position(|t| *t == app.active_tab)
+        .unwrap_or(0);
     let tab_titles: Vec<Line> = Tab::ALL
         .iter()
         .enumerate()
@@ -933,8 +975,17 @@ fn draw_tab_bar(frame: &mut Frame, app: &App, area: Rect) {
             let name = format!("{} ", t.title());
             if i == active_idx {
                 Line::from(vec![
-                    Span::styled(num, Style::default().fg(SURFACE).bg(ACCENT).add_modifier(Modifier::BOLD)),
-                    Span::styled(name, Style::default().fg(ACCENT).add_modifier(Modifier::BOLD)),
+                    Span::styled(
+                        num,
+                        Style::default()
+                            .fg(SURFACE)
+                            .bg(ACCENT)
+                            .add_modifier(Modifier::BOLD),
+                    ),
+                    Span::styled(
+                        name,
+                        Style::default().fg(ACCENT).add_modifier(Modifier::BOLD),
+                    ),
                 ])
             } else {
                 Line::from(vec![
@@ -1010,7 +1061,7 @@ fn draw_dashboard(frame: &mut Frame, app: &App, area: Rect) {
         .constraints([
             Constraint::Length(5), // status boxes
             Constraint::Length(3), // summary
-            Constraint::Min(4),   // recent
+            Constraint::Min(4),    // recent
         ])
         .split(area);
 
@@ -1021,7 +1072,10 @@ fn draw_dashboard(frame: &mut Frame, app: &App, area: Rect) {
     let d = &app.dashboard;
     let summary_text = Line::from(vec![
         Span::styled(" Total: ", Style::default().fg(TEXT_DIM)),
-        Span::styled(format!("{}", d.total_count), Style::default().fg(TEXT).add_modifier(Modifier::BOLD)),
+        Span::styled(
+            format!("{}", d.total_count),
+            Style::default().fg(TEXT).add_modifier(Modifier::BOLD),
+        ),
         Span::styled("  \u{2502}  ", Style::default().fg(BORDER)),
         Span::styled("Active: ", Style::default().fg(TEXT_DIM)),
         Span::styled(
@@ -1031,7 +1085,8 @@ fn draw_dashboard(frame: &mut Frame, app: &App, area: Rect) {
         Span::styled("  \u{2502}  ", Style::default().fg(BORDER)),
         Span::styled("Pipeline: ", Style::default().fg(TEXT_DIM)),
         Span::styled(
-            format!("{} drafting \u{2192} {} ready \u{2192} {} published",
+            format!(
+                "{} drafting \u{2192} {} ready \u{2192} {} published",
                 d.drafting_count, d.ready_count, d.published_count
             ),
             Style::default().fg(TEXT),
@@ -1062,9 +1117,17 @@ fn draw_status_boxes(frame: &mut Frame, app: &App, area: Rect) {
     let items: Vec<(&str, i64, Color)> = vec![
         ("Idea", app.dashboard.idea_count, MUTED),
         ("Drafting", app.dashboard.drafting_count, WARNING),
-        ("Review", app.dashboard.review_count, Color::Rgb(168, 85, 247)),
+        (
+            "Review",
+            app.dashboard.review_count,
+            Color::Rgb(168, 85, 247),
+        ),
         ("Ready", app.dashboard.ready_count, INFO),
-        ("Scheduled", app.dashboard.scheduled_count, Color::Rgb(20, 184, 166)),
+        (
+            "Scheduled",
+            app.dashboard.scheduled_count,
+            Color::Rgb(20, 184, 166),
+        ),
         ("Published", app.dashboard.published_count, SUCCESS),
     ];
 
@@ -1088,11 +1151,8 @@ fn draw_status_boxes(frame: &mut Frame, app: &App, area: Rect) {
         .alignment(Alignment::Center);
         frame.render_widget(count_text, content[0]);
 
-        let label_text = Paragraph::new(Span::styled(
-            *label,
-            Style::default().fg(TEXT_DIM),
-        ))
-        .alignment(Alignment::Center);
+        let label_text = Paragraph::new(Span::styled(*label, Style::default().fg(TEXT_DIM)))
+            .alignment(Alignment::Center);
         frame.render_widget(label_text, content[1]);
     }
 }
@@ -1112,11 +1172,26 @@ fn draw_recent_list(frame: &mut Frame, app: &App, area: Rect) {
     }
 
     let header = Row::new(vec![
-        Cell::from(Span::styled("ID", Style::default().fg(TEXT_DIM).add_modifier(Modifier::BOLD))),
-        Cell::from(Span::styled("Status", Style::default().fg(TEXT_DIM).add_modifier(Modifier::BOLD))),
-        Cell::from(Span::styled("Type", Style::default().fg(TEXT_DIM).add_modifier(Modifier::BOLD))),
-        Cell::from(Span::styled("Title", Style::default().fg(TEXT_DIM).add_modifier(Modifier::BOLD))),
-        Cell::from(Span::styled("Updated", Style::default().fg(TEXT_DIM).add_modifier(Modifier::BOLD))),
+        Cell::from(Span::styled(
+            "ID",
+            Style::default().fg(TEXT_DIM).add_modifier(Modifier::BOLD),
+        )),
+        Cell::from(Span::styled(
+            "Status",
+            Style::default().fg(TEXT_DIM).add_modifier(Modifier::BOLD),
+        )),
+        Cell::from(Span::styled(
+            "Type",
+            Style::default().fg(TEXT_DIM).add_modifier(Modifier::BOLD),
+        )),
+        Cell::from(Span::styled(
+            "Title",
+            Style::default().fg(TEXT_DIM).add_modifier(Modifier::BOLD),
+        )),
+        Cell::from(Span::styled(
+            "Updated",
+            Style::default().fg(TEXT_DIM).add_modifier(Modifier::BOLD),
+        )),
     ])
     .height(1)
     .bottom_margin(0);
@@ -1139,8 +1214,14 @@ fn draw_recent_list(frame: &mut Frame, app: &App, area: Rect) {
                     format!(" {} ", status_label(&c.status)),
                     Style::default().fg(Color::Black).bg(sc),
                 )),
-                Cell::from(Span::styled(c.content_type.to_string(), Style::default().fg(TEXT))),
-                Cell::from(Span::styled(truncate(&c.title, 40), Style::default().fg(TEXT))),
+                Cell::from(Span::styled(
+                    c.content_type.to_string(),
+                    Style::default().fg(TEXT),
+                )),
+                Cell::from(Span::styled(
+                    truncate(&c.title, 40),
+                    Style::default().fg(TEXT),
+                )),
                 Cell::from(Span::styled(
                     c.updated_at.format("%m/%d %H:%M").to_string(),
                     Style::default().fg(TEXT_DIM),
@@ -1219,11 +1300,26 @@ fn draw_drafts(frame: &mut Frame, app: &App, area: Rect) {
     }
 
     let header = Row::new(vec![
-        Cell::from(Span::styled("ID", Style::default().fg(ACCENT).add_modifier(Modifier::BOLD))),
-        Cell::from(Span::styled("Status", Style::default().fg(ACCENT).add_modifier(Modifier::BOLD))),
-        Cell::from(Span::styled("Type", Style::default().fg(ACCENT).add_modifier(Modifier::BOLD))),
-        Cell::from(Span::styled("Title", Style::default().fg(ACCENT).add_modifier(Modifier::BOLD))),
-        Cell::from(Span::styled("Tags", Style::default().fg(ACCENT).add_modifier(Modifier::BOLD))),
+        Cell::from(Span::styled(
+            "ID",
+            Style::default().fg(ACCENT).add_modifier(Modifier::BOLD),
+        )),
+        Cell::from(Span::styled(
+            "Status",
+            Style::default().fg(ACCENT).add_modifier(Modifier::BOLD),
+        )),
+        Cell::from(Span::styled(
+            "Type",
+            Style::default().fg(ACCENT).add_modifier(Modifier::BOLD),
+        )),
+        Cell::from(Span::styled(
+            "Title",
+            Style::default().fg(ACCENT).add_modifier(Modifier::BOLD),
+        )),
+        Cell::from(Span::styled(
+            "Tags",
+            Style::default().fg(ACCENT).add_modifier(Modifier::BOLD),
+        )),
     ])
     .height(1)
     .bottom_margin(1);
@@ -1250,7 +1346,10 @@ fn draw_drafts(frame: &mut Frame, app: &App, area: Rect) {
                     format!(" {} ", status_label(&c.status)),
                     Style::default().fg(Color::Black).bg(sc),
                 )),
-                Cell::from(Span::styled(c.content_type.to_string(), Style::default().fg(TEXT))),
+                Cell::from(Span::styled(
+                    c.content_type.to_string(),
+                    Style::default().fg(TEXT),
+                )),
                 Cell::from(Span::styled(
                     truncate(&c.title, 45),
                     Style::default().fg(if is_selected { TEXT } else { TEXT_DIM }),
@@ -1318,7 +1417,7 @@ fn draw_adapt(frame: &mut Frame, app: &mut App, area: Rect) {
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Length(8), // selected content detail
-            Constraint::Min(6),   // platform list
+            Constraint::Min(6),    // platform list
         ])
         .split(area);
 
@@ -1331,13 +1430,18 @@ fn draw_adapt(frame: &mut Frame, app: &mut App, area: Rect) {
         let detail_lines = vec![
             Line::from(vec![
                 Span::styled("  Title:  ", Style::default().fg(TEXT_DIM)),
-                Span::styled(&content.title, Style::default().fg(TEXT).add_modifier(Modifier::BOLD)),
+                Span::styled(
+                    &content.title,
+                    Style::default().fg(TEXT).add_modifier(Modifier::BOLD),
+                ),
             ]),
             Line::from(vec![
                 Span::styled("  Status: ", Style::default().fg(TEXT_DIM)),
                 Span::styled(
                     format!(" {} ", status_label(&content.status)),
-                    Style::default().fg(Color::Black).bg(status_color(&content.status)),
+                    Style::default()
+                        .fg(Color::Black)
+                        .bg(status_color(&content.status)),
                 ),
                 Span::styled("    Type: ", Style::default().fg(TEXT_DIM)),
                 Span::styled(content.content_type.to_string(), Style::default().fg(TEXT)),
@@ -1353,7 +1457,10 @@ fn draw_adapt(frame: &mut Frame, app: &mut App, area: Rect) {
                 Span::styled("  Chars:  ", Style::default().fg(TEXT_DIM)),
                 Span::styled(format!("{}", content.body.len()), Style::default().fg(TEXT)),
                 Span::styled("    Adaptations: ", Style::default().fg(TEXT_DIM)),
-                Span::styled(format!("{}", content.adaptations.len()), Style::default().fg(ACCENT)),
+                Span::styled(
+                    format!("{}", content.adaptations.len()),
+                    Style::default().fg(ACCENT),
+                ),
             ]),
         ];
         let detail_para = Paragraph::new(detail_lines);
@@ -1384,9 +1491,10 @@ fn draw_adapt(frame: &mut Frame, app: &mut App, area: Rect) {
     let adapt_repo = AdaptationRepo::new(app.db.clone());
     let platforms = all_platforms();
 
-    let header_cells: Vec<Cell> = std::iter::once(
-        Cell::from(Span::styled("Title", Style::default().fg(ACCENT).add_modifier(Modifier::BOLD)))
-    )
+    let header_cells: Vec<Cell> = std::iter::once(Cell::from(Span::styled(
+        "Title",
+        Style::default().fg(ACCENT).add_modifier(Modifier::BOLD),
+    )))
     .chain(platforms.iter().map(|p| {
         let name = p.to_string();
         let short: String = name.chars().take(3).collect();
@@ -1395,9 +1503,10 @@ fn draw_adapt(frame: &mut Frame, app: &mut App, area: Rect) {
             Style::default().fg(TEXT_DIM).add_modifier(Modifier::BOLD),
         ))
     }))
-    .chain(std::iter::once(
-        Cell::from(Span::styled("Chars", Style::default().fg(ACCENT).add_modifier(Modifier::BOLD)))
-    ))
+    .chain(std::iter::once(Cell::from(Span::styled(
+        "Chars",
+        Style::default().fg(ACCENT).add_modifier(Modifier::BOLD),
+    ))))
     .collect();
 
     let header = Row::new(header_cells).height(1).bottom_margin(1);
@@ -1479,10 +1588,22 @@ fn draw_publish(frame: &mut Frame, app: &App, area: Rect) {
     }
 
     let header = Row::new(vec![
-        Cell::from(Span::styled("Title", Style::default().fg(ACCENT).add_modifier(Modifier::BOLD))),
-        Cell::from(Span::styled("Status", Style::default().fg(ACCENT).add_modifier(Modifier::BOLD))),
-        Cell::from(Span::styled("Platforms", Style::default().fg(ACCENT).add_modifier(Modifier::BOLD))),
-        Cell::from(Span::styled("Adaptations", Style::default().fg(ACCENT).add_modifier(Modifier::BOLD))),
+        Cell::from(Span::styled(
+            "Title",
+            Style::default().fg(ACCENT).add_modifier(Modifier::BOLD),
+        )),
+        Cell::from(Span::styled(
+            "Status",
+            Style::default().fg(ACCENT).add_modifier(Modifier::BOLD),
+        )),
+        Cell::from(Span::styled(
+            "Platforms",
+            Style::default().fg(ACCENT).add_modifier(Modifier::BOLD),
+        )),
+        Cell::from(Span::styled(
+            "Adaptations",
+            Style::default().fg(ACCENT).add_modifier(Modifier::BOLD),
+        )),
     ])
     .height(1)
     .bottom_margin(1);
@@ -1493,7 +1614,11 @@ fn draw_publish(frame: &mut Frame, app: &App, area: Rect) {
         .enumerate()
         .map(|(i, c)| {
             let is_selected = i == app.selected_index;
-            let platform_names: Vec<String> = c.adaptations.iter().map(|a| a.platform.to_string()).collect();
+            let platform_names: Vec<String> = c
+                .adaptations
+                .iter()
+                .map(|a| a.platform.to_string())
+                .collect();
             let style = if is_selected {
                 Style::default().bg(SURFACE_HL)
             } else {
@@ -1501,12 +1626,18 @@ fn draw_publish(frame: &mut Frame, app: &App, area: Rect) {
             };
             Row::new(vec![
                 Cell::from(Span::styled(
-                    format!("{}{}", if is_selected { "\u{25b6} " } else { "  " }, truncate(&c.title, 35)),
+                    format!(
+                        "{}{}",
+                        if is_selected { "\u{25b6} " } else { "  " },
+                        truncate(&c.title, 35)
+                    ),
                     Style::default().fg(if is_selected { ACCENT } else { TEXT }),
                 )),
                 Cell::from(Span::styled(
                     format!(" {} ", status_label(&c.status)),
-                    Style::default().fg(Color::Black).bg(status_color(&c.status)),
+                    Style::default()
+                        .fg(Color::Black)
+                        .bg(status_color(&c.status)),
                 )),
                 Cell::from(Span::styled(
                     platform_names.join(", "),
@@ -1565,12 +1696,30 @@ fn draw_platforms(frame: &mut Frame, app: &App, area: Rect) {
     }
 
     let header = Row::new(vec![
-        Cell::from(Span::styled("Platform", Style::default().fg(ACCENT).add_modifier(Modifier::BOLD))),
-        Cell::from(Span::styled("Display Name", Style::default().fg(ACCENT).add_modifier(Modifier::BOLD))),
-        Cell::from(Span::styled("Status", Style::default().fg(ACCENT).add_modifier(Modifier::BOLD))),
-        Cell::from(Span::styled("Credential", Style::default().fg(ACCENT).add_modifier(Modifier::BOLD))),
-        Cell::from(Span::styled("Char Limit", Style::default().fg(ACCENT).add_modifier(Modifier::BOLD))),
-        Cell::from(Span::styled("Difficulty", Style::default().fg(ACCENT).add_modifier(Modifier::BOLD))),
+        Cell::from(Span::styled(
+            "Platform",
+            Style::default().fg(ACCENT).add_modifier(Modifier::BOLD),
+        )),
+        Cell::from(Span::styled(
+            "Display Name",
+            Style::default().fg(ACCENT).add_modifier(Modifier::BOLD),
+        )),
+        Cell::from(Span::styled(
+            "Status",
+            Style::default().fg(ACCENT).add_modifier(Modifier::BOLD),
+        )),
+        Cell::from(Span::styled(
+            "Credential",
+            Style::default().fg(ACCENT).add_modifier(Modifier::BOLD),
+        )),
+        Cell::from(Span::styled(
+            "Char Limit",
+            Style::default().fg(ACCENT).add_modifier(Modifier::BOLD),
+        )),
+        Cell::from(Span::styled(
+            "Difficulty",
+            Style::default().fg(ACCENT).add_modifier(Modifier::BOLD),
+        )),
     ])
     .height(1)
     .bottom_margin(1);
@@ -1603,7 +1752,11 @@ fn draw_platforms(frame: &mut Frame, app: &App, area: Rect) {
             };
             Row::new(vec![
                 Cell::from(Span::styled(
-                    format!("{}{}", if is_selected { "\u{25b6} " } else { "  " }, acc.platform),
+                    format!(
+                        "{}{}",
+                        if is_selected { "\u{25b6} " } else { "  " },
+                        acc.platform
+                    ),
                     Style::default().fg(if is_selected { ACCENT } else { TEXT }),
                 )),
                 Cell::from(Span::styled(&acc.display_name, Style::default().fg(TEXT))),
@@ -1648,10 +1801,8 @@ fn draw_detail_popup(frame: &mut Frame, app: &App) {
     let content = match &app.selected_content {
         Some(c) => c,
         None => {
-            let block = styled_block("Content Detail")
-                .border_style(Style::default().fg(ACCENT));
-            let para = Paragraph::new("No content selected.")
-                .block(block);
+            let block = styled_block("Content Detail").border_style(Style::default().fg(ACCENT));
+            let para = Paragraph::new("No content selected.").block(block);
             frame.render_widget(para, area);
             return;
         }
@@ -1671,7 +1822,7 @@ fn draw_detail_popup(frame: &mut Frame, app: &App) {
         .margin(1)
         .constraints([
             Constraint::Length(5), // metadata
-            Constraint::Min(4),   // body
+            Constraint::Min(4),    // body
             Constraint::Length(3), // adaptations
         ])
         .split(inner);
@@ -1686,7 +1837,9 @@ fn draw_detail_popup(frame: &mut Frame, app: &App) {
             Span::styled("Status:  ", Style::default().fg(TEXT_DIM)),
             Span::styled(
                 format!(" {} ", status_label(&content.status)),
-                Style::default().fg(Color::Black).bg(status_color(&content.status)),
+                Style::default()
+                    .fg(Color::Black)
+                    .bg(status_color(&content.status)),
             ),
         ]),
         Line::from(vec![
@@ -1694,7 +1847,11 @@ fn draw_detail_popup(frame: &mut Frame, app: &App) {
             Span::styled(content.content_type.to_string(), Style::default().fg(TEXT)),
             Span::styled("    Tags: ", Style::default().fg(TEXT_DIM)),
             Span::styled(
-                if content.tags.is_empty() { "none".to_string() } else { content.tags.join(", ") },
+                if content.tags.is_empty() {
+                    "none".to_string()
+                } else {
+                    content.tags.join(", ")
+                },
                 Style::default().fg(INFO),
             ),
         ]),
@@ -1733,7 +1890,10 @@ fn draw_detail_popup(frame: &mut Frame, app: &App) {
             Style::default().fg(TEXT_DIM).add_modifier(Modifier::ITALIC),
         ))
     } else {
-        let mut spans = vec![Span::styled("  Adapted for: ", Style::default().fg(TEXT_DIM))];
+        let mut spans = vec![Span::styled(
+            "  Adapted for: ",
+            Style::default().fg(TEXT_DIM),
+        )];
         for (i, a) in content.adaptations.iter().enumerate() {
             if i > 0 {
                 spans.push(Span::styled(", ", Style::default().fg(BORDER)));
@@ -1776,7 +1936,10 @@ fn draw_help_overlay(frame: &mut Frame) {
 
     let help_text = vec![
         Line::from(""),
-        Line::from(Span::styled("  NAVIGATION", Style::default().fg(ACCENT).add_modifier(Modifier::BOLD))),
+        Line::from(Span::styled(
+            "  NAVIGATION",
+            Style::default().fg(ACCENT).add_modifier(Modifier::BOLD),
+        )),
         Line::from(vec![
             Span::styled("    Tab / Shift-Tab  ", Style::default().fg(WARNING)),
             Span::styled("Switch tabs", Style::default().fg(TEXT)),
@@ -1798,7 +1961,10 @@ fn draw_help_overlay(frame: &mut Frame) {
             Span::styled("Cancel / back", Style::default().fg(TEXT)),
         ]),
         Line::from(""),
-        Line::from(Span::styled("  DRAFTS TAB", Style::default().fg(ACCENT).add_modifier(Modifier::BOLD))),
+        Line::from(Span::styled(
+            "  DRAFTS TAB",
+            Style::default().fg(ACCENT).add_modifier(Modifier::BOLD),
+        )),
         Line::from(vec![
             Span::styled("    n                ", Style::default().fg(WARNING)),
             Span::styled("New draft", Style::default().fg(TEXT)),
@@ -1812,7 +1978,10 @@ fn draw_help_overlay(frame: &mut Frame) {
             Span::styled("Search / filter", Style::default().fg(TEXT)),
         ]),
         Line::from(""),
-        Line::from(Span::styled("  GENERAL", Style::default().fg(ACCENT).add_modifier(Modifier::BOLD))),
+        Line::from(Span::styled(
+            "  GENERAL",
+            Style::default().fg(ACCENT).add_modifier(Modifier::BOLD),
+        )),
         Line::from(vec![
             Span::styled("    ?                ", Style::default().fg(WARNING)),
             Span::styled("Toggle this help", Style::default().fg(TEXT)),
@@ -1837,7 +2006,9 @@ fn draw_confirm_delete(frame: &mut Frame, app: &App) {
     frame.render_widget(Clear, area);
 
     let title_text = if !app.filtered_content.is_empty() {
-        let idx = app.selected_index.min(app.filtered_content.len().saturating_sub(1));
+        let idx = app
+            .selected_index
+            .min(app.filtered_content.len().saturating_sub(1));
         format!("\"{}\"", truncate(&app.filtered_content[idx].title, 30))
     } else {
         "this item".to_string()
@@ -1861,8 +2032,14 @@ fn draw_confirm_delete(frame: &mut Frame, app: &App) {
         Line::from(""),
         Line::from(vec![
             Span::styled("  Press ", Style::default().fg(TEXT_DIM)),
-            Span::styled("y", Style::default().fg(DANGER).add_modifier(Modifier::BOLD)),
-            Span::styled(" to confirm, any other key to cancel", Style::default().fg(TEXT_DIM)),
+            Span::styled(
+                "y",
+                Style::default().fg(DANGER).add_modifier(Modifier::BOLD),
+            ),
+            Span::styled(
+                " to confirm, any other key to cancel",
+                Style::default().fg(TEXT_DIM),
+            ),
         ]),
     ];
     frame.render_widget(Paragraph::new(text), inner);
@@ -1890,7 +2067,11 @@ fn draw_platform_selector(frame: &mut Frame, app: &App) {
         .map(|c| c.adaptations.iter().map(|a| a.platform).collect())
         .unwrap_or_default();
 
-    let body_len = app.selected_content.as_ref().map(|c| c.body.len()).unwrap_or(0);
+    let body_len = app
+        .selected_content
+        .as_ref()
+        .map(|c| c.body.len())
+        .unwrap_or(0);
 
     let items: Vec<ListItem> = platforms
         .iter()
@@ -1955,20 +2136,22 @@ fn draw_publish_confirm(frame: &mut Frame, app: &App) {
     frame.render_widget(block, area);
 
     if app.publish_items.is_empty() {
-        frame.render_widget(
-            Paragraph::new("No items to publish."),
-            inner,
-        );
+        frame.render_widget(Paragraph::new("No items to publish."), inner);
         return;
     }
 
-    let idx = app.selected_index.min(app.publish_items.len().saturating_sub(1));
+    let idx = app
+        .selected_index
+        .min(app.publish_items.len().saturating_sub(1));
     let content = &app.publish_items[idx];
 
     let mut lines = vec![
         Line::from(vec![
             Span::styled("  Content: ", Style::default().fg(TEXT_DIM)),
-            Span::styled(&content.title, Style::default().fg(TEXT).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                &content.title,
+                Style::default().fg(TEXT).add_modifier(Modifier::BOLD),
+            ),
         ]),
         Line::from(""),
         Line::from(Span::styled(
@@ -2000,7 +2183,10 @@ fn draw_publish_confirm(frame: &mut Frame, app: &App) {
     lines.push(Line::from(""));
     lines.push(Line::from(vec![
         Span::styled("  Press ", Style::default().fg(TEXT_DIM)),
-        Span::styled("Enter", Style::default().fg(SUCCESS).add_modifier(Modifier::BOLD)),
+        Span::styled(
+            "Enter",
+            Style::default().fg(SUCCESS).add_modifier(Modifier::BOLD),
+        ),
         Span::styled(" to publish, ", Style::default().fg(TEXT_DIM)),
         Span::styled("Esc", Style::default().fg(WARNING)),
         Span::styled(" to cancel", Style::default().fg(TEXT_DIM)),
@@ -2028,7 +2214,7 @@ fn draw_new_draft_overlay(frame: &mut Frame, app: &App) {
         .constraints([
             Constraint::Length(3), // title
             Constraint::Length(3), // type
-            Constraint::Min(4),   // body
+            Constraint::Min(4),    // body
             Constraint::Length(2), // hints
         ])
         .split(inner);
@@ -2040,7 +2226,11 @@ fn draw_new_draft_overlay(frame: &mut Frame, app: &App) {
         .border_style(Style::default().fg(title_border_color))
         .border_type(ratatui::widgets::BorderType::Rounded)
         .title(" Title ")
-        .title_style(Style::default().fg(if app.input_field == 0 { ACCENT } else { TEXT_DIM }));
+        .title_style(Style::default().fg(if app.input_field == 0 {
+            ACCENT
+        } else {
+            TEXT_DIM
+        }));
 
     let cursor = if app.input_field == 0 { "\u{2588}" } else { "" };
     let title_para = Paragraph::new(Line::from(vec![
@@ -2057,13 +2247,34 @@ fn draw_new_draft_overlay(frame: &mut Frame, app: &App) {
         .border_style(Style::default().fg(type_border_color))
         .border_type(ratatui::widgets::BorderType::Rounded)
         .title(" Type ")
-        .title_style(Style::default().fg(if app.input_field == 2 { ACCENT } else { TEXT_DIM }));
+        .title_style(Style::default().fg(if app.input_field == 2 {
+            ACCENT
+        } else {
+            TEXT_DIM
+        }));
 
     let ct = content_type_options()[app.content_type_idx];
     let type_para = Paragraph::new(Line::from(vec![
-        Span::styled(" \u{25c0} ", Style::default().fg(if app.input_field == 2 { ACCENT } else { TEXT_DIM })),
-        Span::styled(ct.to_string(), Style::default().fg(TEXT).add_modifier(Modifier::BOLD)),
-        Span::styled(" \u{25b6} ", Style::default().fg(if app.input_field == 2 { ACCENT } else { TEXT_DIM })),
+        Span::styled(
+            " \u{25c0} ",
+            Style::default().fg(if app.input_field == 2 {
+                ACCENT
+            } else {
+                TEXT_DIM
+            }),
+        ),
+        Span::styled(
+            ct.to_string(),
+            Style::default().fg(TEXT).add_modifier(Modifier::BOLD),
+        ),
+        Span::styled(
+            " \u{25b6} ",
+            Style::default().fg(if app.input_field == 2 {
+                ACCENT
+            } else {
+                TEXT_DIM
+            }),
+        ),
     ]))
     .block(type_block);
     frame.render_widget(type_para, chunks[1]);
@@ -2075,7 +2286,11 @@ fn draw_new_draft_overlay(frame: &mut Frame, app: &App) {
         .border_style(Style::default().fg(body_border_color))
         .border_type(ratatui::widgets::BorderType::Rounded)
         .title(" Body ")
-        .title_style(Style::default().fg(if app.input_field == 1 { ACCENT } else { TEXT_DIM }));
+        .title_style(Style::default().fg(if app.input_field == 1 {
+            ACCENT
+        } else {
+            TEXT_DIM
+        }));
 
     let body_cursor = if app.input_field == 1 { "\u{2588}" } else { "" };
     let body_para = Paragraph::new(Line::from(vec![
@@ -2091,7 +2306,10 @@ fn draw_new_draft_overlay(frame: &mut Frame, app: &App) {
         Span::styled("  Tab", Style::default().fg(WARNING)),
         Span::styled(" switch field  ", Style::default().fg(TEXT_DIM)),
         Span::styled("Enter", Style::default().fg(WARNING)),
-        Span::styled(" submit (from title) / newline (in body)  ", Style::default().fg(TEXT_DIM)),
+        Span::styled(
+            " submit (from title) / newline (in body)  ",
+            Style::default().fg(TEXT_DIM),
+        ),
         Span::styled("Esc", Style::default().fg(WARNING)),
         Span::styled(" cancel", Style::default().fg(TEXT_DIM)),
     ]));

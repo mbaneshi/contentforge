@@ -1,9 +1,7 @@
 use crate::Publisher;
 use async_trait::async_trait;
-use contentforge_core::{
-    Content, ContentForgeError, Platform, PlatformAdaptation, Publication,
-};
 use chrono::Utc;
+use contentforge_core::{Content, ContentForgeError, Platform, PlatformAdaptation, Publication};
 use uuid::Uuid;
 
 /// DEV.to API adapter.
@@ -108,10 +106,12 @@ impl Publisher for DevToPublisher {
         }
 
         let article: ArticleResponse =
-            resp.json().await.map_err(|e| ContentForgeError::PublishFailed {
-                platform: Platform::DevTo,
-                message: e.to_string(),
-            })?;
+            resp.json()
+                .await
+                .map_err(|e| ContentForgeError::PublishFailed {
+                    platform: Platform::DevTo,
+                    message: e.to_string(),
+                })?;
 
         Ok(Publication {
             id: Uuid::new_v4(),

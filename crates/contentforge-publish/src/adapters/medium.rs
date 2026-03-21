@@ -1,9 +1,7 @@
 use crate::Publisher;
 use async_trait::async_trait;
-use contentforge_core::{
-    Content, ContentForgeError, Platform, PlatformAdaptation, Publication,
-};
 use chrono::Utc;
+use contentforge_core::{Content, ContentForgeError, Platform, PlatformAdaptation, Publication};
 use uuid::Uuid;
 
 /// Medium API adapter.
@@ -38,7 +36,10 @@ impl MediumPublisher {
         let resp = self
             .client
             .get(format!("{}/me", Self::BASE_URL))
-            .header("Authorization", format!("Bearer {}", self.integration_token))
+            .header(
+                "Authorization",
+                format!("Bearer {}", self.integration_token),
+            )
             .send()
             .await
             .map_err(|e| ContentForgeError::PublishFailed {
@@ -46,12 +47,13 @@ impl MediumPublisher {
                 message: e.to_string(),
             })?;
 
-        let data: serde_json::Value = resp.json().await.map_err(|e| {
-            ContentForgeError::PublishFailed {
-                platform: Platform::Medium,
-                message: e.to_string(),
-            }
-        })?;
+        let data: serde_json::Value =
+            resp.json()
+                .await
+                .map_err(|e| ContentForgeError::PublishFailed {
+                    platform: Platform::Medium,
+                    message: e.to_string(),
+                })?;
 
         let id = data["data"]["id"]
             .as_str()
@@ -97,7 +99,10 @@ impl Publisher for MediumPublisher {
         let resp = self
             .client
             .post(format!("{}/users/{}/posts", Self::BASE_URL, author_id))
-            .header("Authorization", format!("Bearer {}", self.integration_token))
+            .header(
+                "Authorization",
+                format!("Bearer {}", self.integration_token),
+            )
             .json(&payload)
             .send()
             .await
@@ -114,12 +119,13 @@ impl Publisher for MediumPublisher {
             });
         }
 
-        let data: serde_json::Value = resp.json().await.map_err(|e| {
-            ContentForgeError::PublishFailed {
-                platform: Platform::Medium,
-                message: e.to_string(),
-            }
-        })?;
+        let data: serde_json::Value =
+            resp.json()
+                .await
+                .map_err(|e| ContentForgeError::PublishFailed {
+                    platform: Platform::Medium,
+                    message: e.to_string(),
+                })?;
 
         let post_id = data["data"]["id"].as_str().unwrap_or("unknown").to_string();
         let url = data["data"]["url"]
@@ -149,7 +155,10 @@ impl Publisher for MediumPublisher {
         let resp = self
             .client
             .get(format!("{}/me", Self::BASE_URL))
-            .header("Authorization", format!("Bearer {}", self.integration_token))
+            .header(
+                "Authorization",
+                format!("Bearer {}", self.integration_token),
+            )
             .send()
             .await
             .map_err(|_| ContentForgeError::AuthFailed(Platform::Medium))?;

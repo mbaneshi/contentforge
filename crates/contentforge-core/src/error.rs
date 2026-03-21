@@ -6,10 +6,7 @@ pub enum ContentForgeError {
     ContentNotFound(uuid::Uuid),
 
     #[error("Platform {platform} publish failed: {message}")]
-    PublishFailed {
-        platform: Platform,
-        message: String,
-    },
+    PublishFailed { platform: Platform, message: String },
 
     #[error("Platform {0} not configured")]
     PlatformNotConfigured(Platform),

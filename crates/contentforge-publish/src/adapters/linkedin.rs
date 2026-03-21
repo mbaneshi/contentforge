@@ -1,9 +1,7 @@
 use crate::Publisher;
 use async_trait::async_trait;
-use contentforge_core::{
-    Content, ContentForgeError, Platform, PlatformAdaptation, Publication,
-};
 use chrono::Utc;
+use contentforge_core::{Content, ContentForgeError, Platform, PlatformAdaptation, Publication};
 use uuid::Uuid;
 
 /// LinkedIn API adapter.

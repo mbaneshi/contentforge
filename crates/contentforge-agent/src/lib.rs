@@ -105,11 +105,7 @@ impl AgentPipeline {
     }
 
     /// Generate content, review it, and adapt for the given platforms.
-    pub async fn run(
-        &self,
-        request: GenerateRequest,
-        platforms: &[Platform],
-    ) -> Result<Content> {
+    pub async fn run(&self, request: GenerateRequest, platforms: &[Platform]) -> Result<Content> {
         tracing::info!(prompt = %request.prompt, "Starting agent pipeline");
 
         // Step 1: Generate draft
@@ -155,7 +151,10 @@ impl ContentGenerator for StubGenerator {
     async fn generate(&self, request: &GenerateRequest) -> Result<Content> {
         Ok(Content::new(
             format!("Draft: {}", request.prompt),
-            format!("# {}\n\nTODO: flesh out content for this topic.", request.prompt),
+            format!(
+                "# {}\n\nTODO: flesh out content for this topic.",
+                request.prompt
+            ),
             request.content_type,
         ))
     }

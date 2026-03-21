@@ -1,12 +1,10 @@
 use anyhow::{bail, Context, Result};
 use clap::Subcommand;
 use contentforge_core::{
-    Content, ContentStatus, ContentType, Platform, PlatformAdaptation, PlatformAccount,
+    Content, ContentStatus, ContentType, Platform, PlatformAccount, PlatformAdaptation,
     PlatformCredential,
 };
-use contentforge_db::repo::{
-    AdaptationRepo, ContentRepo, PlatformAccountRepo, PublicationRepo,
-};
+use contentforge_db::repo::{AdaptationRepo, ContentRepo, PlatformAccountRepo, PublicationRepo};
 use contentforge_db::DbPool;
 use contentforge_publish::adapters::devto::DevToPublisher;
 use contentforge_publish::adapters::linkedin::LinkedInPublisher;
@@ -242,7 +240,10 @@ async fn handle_draft(action: DraftAction, db: &DbPool) -> Result<()> {
                 return Ok(());
             }
 
-            println!("{:<10} {:<12} {:<10} {:<40} TAGS", "ID", "STATUS", "TYPE", "TITLE");
+            println!(
+                "{:<10} {:<12} {:<10} {:<40} TAGS",
+                "ID", "STATUS", "TYPE", "TITLE"
+            );
             println!("{}", "-".repeat(90));
 
             for c in &contents {
@@ -472,9 +473,10 @@ async fn handle_publish(id: &str, platform_str: &str, db: &DbPool) -> Result<()>
 
     println!("Publishing to {platform}...");
 
-    let publication = publisher.publish(&content, adaptation).await.map_err(|e| {
-        anyhow::anyhow!("Publish failed: {e}")
-    })?;
+    let publication = publisher
+        .publish(&content, adaptation)
+        .await
+        .map_err(|e| anyhow::anyhow!("Publish failed: {e}"))?;
 
     // Save publication record.
     let pub_repo = PublicationRepo::new(db.clone());
@@ -501,15 +503,13 @@ fn build_publisher(
                 Ok(Box::new(DevToPublisher::new(key)))
             }
             (Platform::Twitter, PlatformCredential::OAuth2 { access_token, .. }) => {
-                let token = access_token.ok_or_else(|| {
-                    anyhow::anyhow!("Twitter OAuth2 access_token is missing")
-                })?;
+                let token = access_token
+                    .ok_or_else(|| anyhow::anyhow!("Twitter OAuth2 access_token is missing"))?;
                 Ok(Box::new(TwitterPublisher::new(token)))
             }
             (Platform::LinkedIn, PlatformCredential::OAuth2 { access_token, .. }) => {
-                let token = access_token.ok_or_else(|| {
-                    anyhow::anyhow!("LinkedIn OAuth2 access_token is missing")
-                })?;
+                let token = access_token
+                    .ok_or_else(|| anyhow::anyhow!("LinkedIn OAuth2 access_token is missing"))?;
                 // TODO: author_urn should come from account metadata.
                 Ok(Box::new(LinkedInPublisher::new(token, String::new())))
             }
@@ -582,11 +582,18 @@ async fn handle_platforms(action: PlatformAction, db: &DbPool) -> Result<()> {
                 return Ok(());
             }
 
-            println!("{:<12} {:<20} {:<10} CREDENTIAL", "PLATFORM", "NAME", "STATUS");
+            println!(
+                "{:<12} {:<20} {:<10} CREDENTIAL",
+                "PLATFORM", "NAME", "STATUS"
+            );
             println!("{}", "-".repeat(60));
 
             for account in &accounts {
-                let status = if account.enabled { "active" } else { "disabled" };
+                let status = if account.enabled {
+                    "active"
+                } else {
+                    "disabled"
+                };
                 let cred_type = match &account.credential {
                     PlatformCredential::ApiKey { .. } => "api_key",
                     PlatformCredential::OAuth2 { .. } => "oauth2",
@@ -605,21 +612,20 @@ async fn handle_platforms(action: PlatformAction, db: &DbPool) -> Result<()> {
             key,
             name,
         } => {
-            let p: Platform = platform
-                .parse()
-                .map_err(|e: String| anyhow::anyhow!(e))?;
+            let p: Platform = platform.parse().map_err(|e: String| anyhow::anyhow!(e))?;
 
             let credential = match p {
                 Platform::DevTo => PlatformCredential::ApiKey { key },
-                Platform::Twitter | Platform::LinkedIn | Platform::YouTube | Platform::Instagram => {
-                    PlatformCredential::OAuth2 {
-                        client_id: String::new(),
-                        client_secret: String::new(),
-                        access_token: Some(key),
-                        refresh_token: None,
-                        expires_at: None,
-                    }
-                }
+                Platform::Twitter
+                | Platform::LinkedIn
+                | Platform::YouTube
+                | Platform::Instagram => PlatformCredential::OAuth2 {
+                    client_id: String::new(),
+                    client_secret: String::new(),
+                    access_token: Some(key),
+                    refresh_token: None,
+                    expires_at: None,
+                },
                 Platform::Medium => PlatformCredential::IntegrationToken { token: key },
                 Platform::Substack => PlatformCredential::Cookie { value: key },
                 _ => PlatformCredential::ApiKey { key },
@@ -639,9 +645,7 @@ async fn handle_platforms(action: PlatformAction, db: &DbPool) -> Result<()> {
         }
 
         PlatformAction::Remove { platform } => {
-            let p: Platform = platform
-                .parse()
-                .map_err(|e: String| anyhow::anyhow!(e))?;
+            let p: Platform = platform.parse().map_err(|e: String| anyhow::anyhow!(e))?;
             repo.delete(p)?;
             println!("Removed platform: {p}");
         }

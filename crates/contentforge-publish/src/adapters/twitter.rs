@@ -1,9 +1,7 @@
 use crate::Publisher;
 use async_trait::async_trait;
-use contentforge_core::{
-    Content, ContentForgeError, Platform, PlatformAdaptation, Publication,
-};
 use chrono::Utc;
+use contentforge_core::{Content, ContentForgeError, Platform, PlatformAdaptation, Publication};
 use uuid::Uuid;
 
 /// Twitter/X API v2 adapter.
@@ -72,17 +70,15 @@ impl TwitterPublisher {
                 });
             }
 
-            let data: serde_json::Value = resp.json().await.map_err(|e| {
-                ContentForgeError::PublishFailed {
-                    platform: Platform::Twitter,
-                    message: e.to_string(),
-                }
-            })?;
+            let data: serde_json::Value =
+                resp.json()
+                    .await
+                    .map_err(|e| ContentForgeError::PublishFailed {
+                        platform: Platform::Twitter,
+                        message: e.to_string(),
+                    })?;
 
-            let tweet_id = data["data"]["id"]
-                .as_str()
-                .unwrap_or_default()
-                .to_string();
+            let tweet_id = data["data"]["id"].as_str().unwrap_or_default().to_string();
 
             if i == 0 {
                 first_id = tweet_id.clone();
@@ -152,17 +148,15 @@ impl Publisher for TwitterPublisher {
             });
         }
 
-        let data: serde_json::Value = resp.json().await.map_err(|e| {
-            ContentForgeError::PublishFailed {
-                platform: Platform::Twitter,
-                message: e.to_string(),
-            }
-        })?;
+        let data: serde_json::Value =
+            resp.json()
+                .await
+                .map_err(|e| ContentForgeError::PublishFailed {
+                    platform: Platform::Twitter,
+                    message: e.to_string(),
+                })?;
 
-        let tweet_id = data["data"]["id"]
-            .as_str()
-            .unwrap_or_default()
-            .to_string();
+        let tweet_id = data["data"]["id"].as_str().unwrap_or_default().to_string();
 
         Ok(Publication {
             id: Uuid::new_v4(),
@@ -177,7 +171,11 @@ impl Publisher for TwitterPublisher {
     async fn delete(&self, publication: &Publication) -> Result<(), ContentForgeError> {
         let resp = self
             .client
-            .delete(format!("{}/tweets/{}", Self::BASE_URL, publication.platform_post_id))
+            .delete(format!(
+                "{}/tweets/{}",
+                Self::BASE_URL,
+                publication.platform_post_id
+            ))
             .header("Authorization", format!("Bearer {}", self.bearer_token))
             .send()
             .await

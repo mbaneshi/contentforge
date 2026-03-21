@@ -1,7 +1,7 @@
 use crate::DbPool;
 use anyhow::Result;
 use contentforge_core::{
-    Content, ContentStatus, ContentType, Platform, PlatformAdaptation, PlatformAccount,
+    Content, ContentStatus, ContentType, Platform, PlatformAccount, PlatformAdaptation,
     PlatformCredential, Publication,
 };
 use uuid::Uuid;
@@ -92,7 +92,8 @@ impl ContentRepo {
             "SELECT id, title, body, content_type, status, tags, project, created_at, updated_at
              FROM content WHERE id = ?1",
         )?;
-        stmt.query_row([id.to_string()], parse_content_row).optional()
+        stmt.query_row([id.to_string()], parse_content_row)
+            .optional()
     }
 
     pub fn get_by_id_full(&self, id: Uuid) -> Result<Option<Content>> {
@@ -153,7 +154,9 @@ impl ContentRepo {
         let mut stmt =
             conn.prepare("SELECT status, count(*) FROM content GROUP BY status ORDER BY status")?;
         let rows = stmt
-            .query_map([], |row| Ok((row.get::<_, String>(0)?, row.get::<_, i64>(1)?)))?
+            .query_map([], |row| {
+                Ok((row.get::<_, String>(0)?, row.get::<_, i64>(1)?))
+            })?
             .collect::<std::result::Result<Vec<_>, _>>()?;
         Ok(rows)
     }
@@ -437,7 +440,8 @@ mod tests {
         assert_eq!(loaded.title, "Test Post");
         assert_eq!(loaded.body, "Hello world");
 
-        repo.update_status(content.id, ContentStatus::Drafting).unwrap();
+        repo.update_status(content.id, ContentStatus::Drafting)
+            .unwrap();
         let updated = repo.get_by_id(content.id).unwrap().unwrap();
         assert_eq!(updated.status, ContentStatus::Drafting);
 
