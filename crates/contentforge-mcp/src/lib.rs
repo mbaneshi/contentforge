@@ -16,6 +16,7 @@ use serde::{Deserialize, Serialize};
 
 /// ContentForge MCP server exposing content pipeline tools to AI assistants.
 #[derive(Clone)]
+#[allow(dead_code)]
 pub struct ContentForgeMcp {
     db: DbPool,
     publishers: Arc<PublisherRegistry>,

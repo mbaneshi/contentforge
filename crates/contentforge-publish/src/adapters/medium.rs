@@ -29,6 +29,7 @@ impl MediumPublisher {
     }
 
     /// Fetch and cache the author ID.
+    #[allow(dead_code)]
     async fn ensure_author_id(&mut self) -> Result<String, ContentForgeError> {
         if let Some(ref id) = self.author_id {
             return Ok(id.clone());

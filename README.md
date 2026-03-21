@@ -4,8 +4,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/mbaneshi/contentforge/actions/workflows/ci.yml"><img src="https://github.com/mbaneshi/contentforge/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://crates.io/crates/contentforge"><img src="https://img.shields.io/crates/v/contentforge.svg" alt="crates.io"></a>
+  <a href="https://github.com/mbaneshi-labs/contentforge/actions/workflows/ci.yml"><img src="https://github.com/mbaneshi-labs/contentforge/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <img src="https://img.shields.io/badge/rust-1.80%2B-orange.svg" alt="Rust 1.80+">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
 </p>
@@ -85,7 +84,7 @@ cargo install contentforge
 ### Build from Source
 
 ```bash
-git clone https://github.com/mbaneshi/contentforge.git
+git clone https://github.com/mbaneshi-labs/contentforge.git
 cd contentforge
 cargo build --release
 # Binary is at target/release/contentforge

@@ -6,7 +6,6 @@ use chrono::Utc;
 use contentforge_core::{ScheduleEntry, ScheduleStatus};
 use contentforge_db::DbPool;
 use contentforge_publish::PublisherRegistry;
-use tracing;
 
 // ---------------------------------------------------------------------------
 // Configuration

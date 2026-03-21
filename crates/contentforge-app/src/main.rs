@@ -7,7 +7,6 @@ use tracing_subscriber::EnvFilter;
 
 use contentforge_api::AppState;
 use contentforge_cli::CliCommand;
-use contentforge_db;
 use contentforge_mcp::ContentForgeMcp;
 use contentforge_publish::PublisherRegistry;
 

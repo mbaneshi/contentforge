@@ -242,10 +242,7 @@ async fn handle_draft(action: DraftAction, db: &DbPool) -> Result<()> {
                 return Ok(());
             }
 
-            println!(
-                "{:<10} {:<12} {:<10} {:<40} {}",
-                "ID", "STATUS", "TYPE", "TITLE", "TAGS"
-            );
+            println!("{:<10} {:<12} {:<10} {:<40} TAGS", "ID", "STATUS", "TYPE", "TITLE");
             println!("{}", "-".repeat(90));
 
             for c in &contents {
@@ -585,7 +582,7 @@ async fn handle_platforms(action: PlatformAction, db: &DbPool) -> Result<()> {
                 return Ok(());
             }
 
-            println!("{:<12} {:<20} {:<10} {}", "PLATFORM", "NAME", "STATUS", "CREDENTIAL");
+            println!("{:<12} {:<20} {:<10} CREDENTIAL", "PLATFORM", "NAME", "STATUS");
             println!("{}", "-".repeat(60));
 
             for account in &accounts {

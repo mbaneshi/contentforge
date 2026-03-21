@@ -161,7 +161,7 @@ impl Publisher for DevToPublisher {
             .header("User-Agent", "contentforge/0.1.0")
             .send()
             .await
-            .map_err(|e| ContentForgeError::AuthFailed(Platform::DevTo))?;
+            .map_err(|_| ContentForgeError::AuthFailed(Platform::DevTo))?;
 
         if resp.status().as_u16() == 401 {
             return Err(ContentForgeError::AuthFailed(Platform::DevTo));
