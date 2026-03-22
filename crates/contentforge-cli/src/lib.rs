@@ -58,13 +58,35 @@ pub enum CliCommand {
         #[command(subcommand)]
         action: PlatformAction,
     },
-    /// Run, list, and manage automated pipelines.
+    /// Run, list, and manage automated pipelines (Pro feature).
     Pipeline {
         #[command(subcommand)]
         action: PipelineAction,
     },
+    /// Manage your ContentForge license.
+    License {
+        #[command(subcommand)]
+        action: LicenseAction,
+    },
     /// Show the current content pipeline overview.
     Status,
+}
+
+// ---------------------------------------------------------------------------
+// License subcommands
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Subcommand)]
+pub enum LicenseAction {
+    /// Activate a license key.
+    Activate {
+        /// Your license key.
+        key: String,
+    },
+    /// Show current license status.
+    Status,
+    /// Deactivate the current license.
+    Deactivate,
 }
 
 // ---------------------------------------------------------------------------
@@ -229,6 +251,7 @@ pub async fn execute(cmd: CliCommand, db: DbPool) -> Result<()> {
         CliCommand::Schedule { action } => handle_schedule(action, &db).await,
         CliCommand::Platforms { action } => handle_platforms(action, &db).await,
         CliCommand::Pipeline { action } => handle_pipeline(action, &db).await,
+        CliCommand::License { action } => handle_license(action, &db).await,
         CliCommand::Status => handle_status(&db).await,
     }
 }
@@ -853,6 +876,13 @@ async fn handle_pipeline(action: PipelineAction, db: &DbPool) -> Result<()> {
             platforms,
             skip_review,
         } => {
+            // Pro feature gate
+            let license = load_license(db);
+            if let Err(msg) = license.require_pro("Pipeline automation") {
+                println!("{msg}");
+                return Ok(());
+            }
+
             let uuid = resolve_uuid(&content_id, db)?;
 
             let platform_list: Vec<String> = platforms
@@ -986,6 +1016,87 @@ async fn handle_pipeline(action: PipelineAction, db: &DbPool) -> Result<()> {
 
     Ok(())
 }
+
+// ---------------------------------------------------------------------------
+// License handlers
+// ---------------------------------------------------------------------------
+
+async fn handle_license(action: LicenseAction, db: &DbPool) -> Result<()> {
+    match action {
+        LicenseAction::Activate { key } => {
+            let license = contentforge_core::License::validate(&key);
+            match license.tier {
+                contentforge_core::Tier::Free => {
+                    println!("Invalid license key. Tier remains: Free");
+                    println!("\nGet a Pro license: https://contentforge.dev/pro");
+                }
+                tier => {
+                    // Store the key in the database
+                    let conn = db.lock().map_err(|e| anyhow::anyhow!("{e}"))?;
+                    conn.execute(
+                        "INSERT OR REPLACE INTO platform_accounts (id, platform, display_name, credential, enabled, created_at)
+                         VALUES ('license', '\"license\"', 'ContentForge License', ?1, 1, datetime('now'))",
+                        [&key],
+                    )?;
+                    println!("License activated!");
+                    println!("  Tier:    {tier}");
+                    println!("  Email:   {}", license.email);
+                    if let Some(ref exp) = license.expires_at {
+                        println!("  Expires: {exp}");
+                    }
+                }
+            }
+        }
+
+        LicenseAction::Status => {
+            let license = load_license(db);
+            println!("ContentForge License");
+            println!("  Tier:  {}", license.tier);
+            if !license.email.is_empty() {
+                println!("  Email: {}", license.email);
+            }
+            if let Some(ref exp) = license.expires_at {
+                println!("  Expires: {exp}");
+            }
+            if license.tier == contentforge_core::Tier::Free {
+                println!("\nUpgrade to Pro: https://contentforge.dev/pro");
+                println!("Pro features: pipeline automation, approval flows, cron scheduling, encrypted credentials");
+            }
+        }
+
+        LicenseAction::Deactivate => {
+            let conn = db.lock().map_err(|e| anyhow::anyhow!("{e}"))?;
+            conn.execute("DELETE FROM platform_accounts WHERE id = 'license'", [])?;
+            println!("License deactivated. Tier: Free");
+        }
+    }
+    Ok(())
+}
+
+/// Load the license from the database, or return Free tier.
+fn load_license(db: &DbPool) -> contentforge_core::License {
+    let conn = match db.lock() {
+        Ok(c) => c,
+        Err(_) => return contentforge_core::License::free(),
+    };
+
+    let key: Option<String> = conn
+        .query_row(
+            "SELECT credential FROM platform_accounts WHERE id = 'license'",
+            [],
+            |row| row.get(0),
+        )
+        .ok();
+
+    match key {
+        Some(k) => contentforge_core::License::validate(&k),
+        None => contentforge_core::License::free(),
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Utility: resolve short job UUID prefix
+// ---------------------------------------------------------------------------
 
 fn resolve_job_uuid(id: &str, db: &DbPool) -> Result<Uuid> {
     if let Ok(uuid) = Uuid::parse_str(id) {

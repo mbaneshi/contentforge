@@ -85,6 +85,11 @@ enum Command {
         #[command(subcommand)]
         action: contentforge_cli::PipelineAction,
     },
+    /// Manage your ContentForge license.
+    License {
+        #[command(subcommand)]
+        action: contentforge_cli::LicenseAction,
+    },
     /// Show the current content pipeline overview.
     Status,
 }
@@ -152,6 +157,9 @@ async fn main() -> Result<()> {
         }
         Some(Command::Pipeline { action }) => {
             contentforge_cli::execute(CliCommand::Pipeline { action }, db).await
+        }
+        Some(Command::License { action }) => {
+            contentforge_cli::execute(CliCommand::License { action }, db).await
         }
         Some(Command::Status) => contentforge_cli::execute(CliCommand::Status, db).await,
     }
