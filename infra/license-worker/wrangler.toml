@@ -1,0 +1,8 @@
+name = "contentforge-license"
+main = "src/worker.js"
+compatibility_date = "2026-03-01"
+
+[vars]
+STRIPE_WEBHOOK_SECRET = ""  # Set via `wrangler secret put`
+ED25519_PRIVATE_KEY = ""     # Set via `wrangler secret put`
+RESEND_API_KEY = ""          # Set via `wrangler secret put`

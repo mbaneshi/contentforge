@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ContentForge — The Developer's Content Engine</title>
+  <meta name="description" content="Draft, adapt, schedule, publish — from one Rust binary. CLI + TUI + Web + MCP.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚒</text></svg>">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+              400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+              800: '#3730a3', 900: '#312e81',
+            }
+          },
+          fontFamily: {
+            mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background: #0f172a; }
+    .terminal {
+      background: #0c0e14;
+      border: 1px solid #1e293b;
+      border-radius: 0.75rem;
+      overflow: hidden;
+    }
+    .terminal-bar {
+      background: #151923;
+      padding: 0.6rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      border-bottom: 1px solid #1e293b;
+    }
+    .terminal-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+    }
+    .terminal-body {
+      padding: 1.25rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.875rem;
+      line-height: 1.7;
+      overflow-x: auto;
+    }
+    .glow { box-shadow: 0 0 60px rgba(99, 102, 241, 0.15); }
+    .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
+    .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(99, 102, 241, 0.1); }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+    .cursor-blink::after { content:'_'; animation: blink 1s step-end infinite; color: #818cf8; }
+    .fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.6s, transform 0.6s; }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
+    .grid-bg {
+      background-image:
+        linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+  </style>
+</head>
+<body class="text-slate-300 antialiased grid-bg">
+
+  <!-- Nav -->
+  <nav class="fixed top-0 w-full z-50 bg-slate-900/80 backdrop-blur-md border-b border-slate-800/60">
+    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <a href="#" class="flex items-center gap-2 text-white font-bold text-lg tracking-tight">
+        <span class="text-brand-400">⚒</span> ContentForge
+      </a>
+      <div class="hidden md:flex items-center gap-8 text-sm text-slate-400">
+        <a href="#how-it-works" class="hover:text-white transition">How it works</a>
+        <a href="#interfaces" class="hover:text-white transition">Interfaces</a>
+        <a href="#platforms" class="hover:text-white transition">Platforms</a>
+        <a href="#pricing" class="hover:text-white transition">Pricing</a>
+        <a href="https://mbaneshi-labs.github.io/contentforge/" target="_blank" class="hover:text-white transition">Docs</a>
+        <a href="https://github.com/mbaneshi-labs/contentforge" target="_blank" class="text-white bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg transition">
+          GitHub
+        </a>
+      </div>
+      <button id="mobile-toggle" class="md:hidden text-slate-400 hover:text-white">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+    </div>
+    <div id="mobile-menu" class="hidden md:hidden border-t border-slate-800 bg-slate-900/95 backdrop-blur-md">
+      <div class="px-6 py-4 flex flex-col gap-3 text-sm">
+        <a href="#how-it-works" class="text-slate-400 hover:text-white py-1">How it works</a>
+        <a href="#interfaces" class="text-slate-400 hover:text-white py-1">Interfaces</a>
+        <a href="#platforms" class="text-slate-400 hover:text-white py-1">Platforms</a>
+        <a href="#pricing" class="text-slate-400 hover:text-white py-1">Pricing</a>
+        <a href="https://mbaneshi-labs.github.io/contentforge/" target="_blank" class="text-slate-400 hover:text-white py-1">Docs</a>
+        <a href="https://github.com/mbaneshi-labs/contentforge" target="_blank" class="text-slate-400 hover:text-white py-1">GitHub</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="relative pt-32 pb-20 md:pt-44 md:pb-32 overflow-hidden">
+    <div class="absolute inset-0 pointer-events-none">
+      <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-brand-500/10 rounded-full blur-[120px]"></div>
+    </div>
+    <div class="relative max-w-4xl mx-auto px-6 text-center">
+      <div class="inline-flex items-center gap-2 bg-brand-500/10 border border-brand-500/20 text-brand-300 text-sm px-4 py-1.5 rounded-full mb-8">
+        <span class="w-2 h-2 bg-green-400 rounded-full"></span>
+        Rust-native &middot; Single binary &middot; MIT licensed
+      </div>
+      <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold text-white tracking-tight leading-tight">
+        The developer's<br><span class="bg-gradient-to-r from-brand-400 to-violet-400 bg-clip-text text-transparent">content engine</span>
+      </h1>
+      <p class="mt-6 text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
+        Draft, adapt, schedule, publish &mdash; from one binary.<br class="hidden sm:block">
+        CLI + TUI + Web + MCP. Zero runtime dependencies.
+      </p>
+      <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a href="#install" class="w-full sm:w-auto px-8 py-3.5 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl transition shadow-lg shadow-brand-500/25">
+          Install Free
+        </a>
+        <a href="https://github.com/mbaneshi-labs/contentforge" target="_blank" class="w-full sm:w-auto px-8 py-3.5 bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-xl transition border border-slate-700">
+          View on GitHub
+        </a>
+      </div>
+      <div class="mt-14 max-w-2xl mx-auto terminal glow">
+        <div class="terminal-bar">
+          <span class="terminal-dot bg-red-500/80"></span>
+          <span class="terminal-dot bg-yellow-500/80"></span>
+          <span class="terminal-dot bg-green-500/80"></span>
+          <span class="ml-3 text-xs text-slate-500">terminal</span>
+        </div>
+        <div class="terminal-body text-left">
+          <div><span class="text-green-400">$</span> <span class="text-slate-300">contentforge draft</span> <span class="text-yellow-300">"Why Rust is eating the world"</span></div>
+          <div class="text-slate-500">✓ Draft created: drafts/why-rust-is-eating-the-world.md</div>
+          <div class="mt-2"><span class="text-green-400">$</span> <span class="text-slate-300">contentforge adapt</span> <span class="text-cyan-400">--all</span></div>
+          <div class="text-slate-500">✓ Adapted for Twitter, LinkedIn, DEV.to, Mastodon, Bluesky, Medium</div>
+          <div class="mt-2"><span class="text-green-400">$</span> <span class="text-slate-300">contentforge publish</span> <span class="text-cyan-400">--all</span></div>
+          <div class="text-slate-500">✓ Published to 6 platforms in 2.3s<span class="cursor-blink"></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Problem -->
+  <section class="py-20 md:py-28 fade-in">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold text-white">The content distribution problem</h2>
+        <p class="mt-4 text-slate-400 text-lg max-w-2xl mx-auto">
+          You write a great post. Then you copy-paste it to Twitter, LinkedIn, DEV.to, Mastodon...
+          reformatting each time. Every. Single. Time.
+        </p>
+      </div>
+      <div class="grid md:grid-cols-2 gap-8">
+        <!-- Before -->
+        <div class="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-8">
+          <div class="flex items-center gap-2 mb-6">
+            <span class="w-3 h-3 bg-red-400 rounded-full"></span>
+            <span class="text-red-400 font-semibold text-sm uppercase tracking-wider">Before</span>
+          </div>
+          <ul class="space-y-4 text-slate-400">
+            <li class="flex items-start gap-3">
+              <span class="text-red-400/70 mt-0.5">✗</span>
+              <span>Write post in your editor</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="text-red-400/70 mt-0.5">✗</span>
+              <span>Manually reformat for Twitter's 280-char limit</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="text-red-400/70 mt-0.5">✗</span>
+              <span>Rewrite again for LinkedIn's tone</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="text-red-400/70 mt-0.5">✗</span>
+              <span>Convert Markdown for DEV.to front matter</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="text-red-400/70 mt-0.5">✗</span>
+              <span>Open 6 browser tabs, paste everywhere</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="text-red-400/70 mt-0.5">✗</span>
+              <span>Forget Mastodon. Again.</span>
+            </li>
+          </ul>
+          <div class="mt-6 pt-6 border-t border-slate-700/50 text-sm text-slate-500">
+            ~45 minutes per post &middot; Error-prone &middot; Soul-crushing
+          </div>
+        </div>
+        <!-- After -->
+        <div class="bg-brand-500/5 border border-brand-500/20 rounded-2xl p-8">
+          <div class="flex items-center gap-2 mb-6">
+            <span class="w-3 h-3 bg-green-400 rounded-full"></span>
+            <span class="text-green-400 font-semibold text-sm uppercase tracking-wider">After</span>
+          </div>
+          <ul class="space-y-4 text-slate-300">
+            <li class="flex items-start gap-3">
+              <span class="text-green-400 mt-0.5">✓</span>
+              <span>Write once in Markdown</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="text-green-400 mt-0.5">✓</span>
+              <span>Auto-adapt to every platform's format</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="text-green-400 mt-0.5">✓</span>
+              <span>Publish to all 6 platforms in one command</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="text-green-400 mt-0.5">✓</span>
+              <span>Schedule for optimal posting times</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="text-green-400 mt-0.5">✓</span>
+              <span>Track status across platforms</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="text-green-400 mt-0.5">✓</span>
+              <span>All from your terminal</span>
+            </li>
+          </ul>
+          <div class="mt-6 pt-6 border-t border-brand-500/20 text-sm text-brand-300">
+            ~30 seconds &middot; Consistent &middot; Automated
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section id="how-it-works" class="py-20 md:py-28 fade-in">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold text-white">Three commands. That's it.</h2>
+        <p class="mt-4 text-slate-400 text-lg">From draft to published across 6 platforms.</p>
+      </div>
+      <div class="grid md:grid-cols-3 gap-8">
+        <!-- Step 1 -->
+        <div>
+          <div class="flex items-center gap-3 mb-4">
+            <span class="flex items-center justify-center w-8 h-8 bg-brand-500/20 text-brand-400 rounded-lg text-sm font-bold">1</span>
+            <h3 class="text-white font-semibold text-lg">Draft</h3>
+          </div>
+          <div class="terminal">
+            <div class="terminal-bar">
+              <span class="terminal-dot bg-red-500/80"></span>
+              <span class="terminal-dot bg-yellow-500/80"></span>
+              <span class="terminal-dot bg-green-500/80"></span>
+            </div>
+            <div class="terminal-body text-sm">
+              <div><span class="text-green-400">$</span> contentforge draft \</div>
+              <div class="pl-4"><span class="text-yellow-300">"Why Rust is eating the world"</span></div>
+              <div class="mt-2 text-slate-500"># Opens $EDITOR with template</div>
+              <div class="text-slate-500"># Front matter auto-generated</div>
+              <div class="mt-2 text-green-400/80">✓ Draft saved</div>
+            </div>
+          </div>
+          <p class="mt-4 text-sm text-slate-400">Write in Markdown with your favorite editor. ContentForge handles the metadata.</p>
+        </div>
+        <!-- Step 2 -->
+        <div>
+          <div class="flex items-center gap-3 mb-4">
+            <span class="flex items-center justify-center w-8 h-8 bg-brand-500/20 text-brand-400 rounded-lg text-sm font-bold">2</span>
+            <h3 class="text-white font-semibold text-lg">Adapt</h3>
+          </div>
+          <div class="terminal">
+            <div class="terminal-bar">
+              <span class="terminal-dot bg-red-500/80"></span>
+              <span class="terminal-dot bg-yellow-500/80"></span>
+              <span class="terminal-dot bg-green-500/80"></span>
+            </div>
+            <div class="terminal-body text-sm">
+              <div><span class="text-green-400">$</span> contentforge adapt <span class="text-cyan-400">--all</span></div>
+              <div class="mt-2 text-slate-500">Adapting for 6 platforms...</div>
+              <div class="text-violet-400">  twitter</span>  → 280 chars, thread</div>
+              <div class="text-blue-400">  linkedin</span> → professional tone</div>
+              <div class="text-slate-300">  devto</span>     → markdown + front matter</div>
+              <div class="text-purple-400">  mastodon</span>  → 500 chars</div>
+              <div class="text-sky-400">  bluesky</span>   → 300 chars</div>
+              <div class="text-slate-200">  medium</span>    → rich text</div>
+              <div class="mt-2 text-green-400/80">✓ 6 adaptations ready</div>
+            </div>
+          </div>
+          <p class="mt-4 text-sm text-slate-400">Each platform gets content formatted to its constraints and audience expectations.</p>
+        </div>
+        <!-- Step 3 -->
+        <div>
+          <div class="flex items-center gap-3 mb-4">
+            <span class="flex items-center justify-center w-8 h-8 bg-brand-500/20 text-brand-400 rounded-lg text-sm font-bold">3</span>
+            <h3 class="text-white font-semibold text-lg">Publish</h3>
+          </div>
+          <div class="terminal">
+            <div class="terminal-bar">
+              <span class="terminal-dot bg-red-500/80"></span>
+              <span class="terminal-dot bg-yellow-500/80"></span>
+              <span class="terminal-dot bg-green-500/80"></span>
+            </div>
+            <div class="terminal-body text-sm">
+              <div><span class="text-green-400">$</span> contentforge publish <span class="text-cyan-400">--all</span></div>
+              <div class="mt-2 text-slate-500">Publishing to 6 platforms...</div>
+              <div><span class="text-green-400">✓</span> twitter    <span class="text-slate-500">t.co/abc123</span></div>
+              <div><span class="text-green-400">✓</span> linkedin   <span class="text-slate-500">lnkd.in/xyz</span></div>
+              <div><span class="text-green-400">✓</span> devto      <span class="text-slate-500">dev.to/you/post</span></div>
+              <div><span class="text-green-400">✓</span> mastodon   <span class="text-slate-500">@you@mstdn</span></div>
+              <div><span class="text-green-400">✓</span> bluesky    <span class="text-slate-500">bsky.app/...</span></div>
+              <div><span class="text-green-400">✓</span> medium     <span class="text-slate-500">medium.com/...</span></div>
+              <div class="mt-2 text-green-400/80">✓ All published in 2.3s</div>
+            </div>
+          </div>
+          <p class="mt-4 text-sm text-slate-400">One command pushes everywhere. Schedule for later or publish immediately.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 Interfaces -->
+  <section id="interfaces" class="py-20 md:py-28 bg-slate-800/20 fade-in">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold text-white">Four interfaces. One tool.</h2>
+        <p class="mt-4 text-slate-400 text-lg">Work however you want. Same power everywhere.</p>
+      </div>
+      <div class="grid md:grid-cols-2 gap-8">
+        <!-- CLI -->
+        <div class="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6 card-hover">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="flex items-center justify-center w-10 h-10 bg-green-500/10 text-green-400 rounded-xl text-lg">
+              &gt;_
+            </span>
+            <div>
+              <h3 class="text-white font-semibold">CLI</h3>
+              <p class="text-sm text-slate-500">Scriptable. Pipeable. Fast.</p>
+            </div>
+          </div>
+          <div class="terminal">
+            <div class="terminal-body text-xs">
+              <div><span class="text-green-400">$</span> contentforge list <span class="text-cyan-400">--status</span> published</div>
+              <div class="text-slate-500 mt-1">ID    Title                    Platforms  Published</div>
+              <div class="text-slate-400">cf01  Why Rust is eating...    6/6        2 min ago</div>
+              <div class="text-slate-400">cf02  Async patterns in...     4/6        1 hour ago</div>
+            </div>
+          </div>
+        </div>
+        <!-- TUI -->
+        <div class="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6 card-hover">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="flex items-center justify-center w-10 h-10 bg-violet-500/10 text-violet-400 rounded-xl text-lg">
+              ▣
+            </span>
+            <div>
+              <h3 class="text-white font-semibold">TUI</h3>
+              <p class="text-sm text-slate-500">Interactive terminal dashboard.</p>
+            </div>
+          </div>
+          <div class="terminal">
+            <div class="terminal-body text-xs">
+              <div class="text-brand-400">┌─ ContentForge ──────────────────────┐</div>
+              <div class="text-brand-400">│</div>
+              <div><span class="text-brand-400">│</span> <span class="bg-brand-500/30 text-white px-1">▸ Why Rust is eating the world</span></div>
+              <div><span class="text-brand-400">│</span>   Async patterns in Rust</div>
+              <div><span class="text-brand-400">│</span>   Zero-cost abstractions deep dive</div>
+              <div class="text-brand-400">│</div>
+              <div class="text-brand-400">└─ [d]raft [a]dapt [p]ublish [q]uit ─┘</div>
+            </div>
+          </div>
+        </div>
+        <!-- Web -->
+        <div class="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6 card-hover">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="flex items-center justify-center w-10 h-10 bg-sky-500/10 text-sky-400 rounded-xl text-lg">
+              ◎
+            </span>
+            <div>
+              <h3 class="text-white font-semibold">Web</h3>
+              <p class="text-sm text-slate-500">Built-in web UI. No separate server.</p>
+            </div>
+          </div>
+          <div class="terminal">
+            <div class="terminal-body text-xs">
+              <div><span class="text-green-400">$</span> contentforge serve</div>
+              <div class="mt-1 text-slate-500">Web UI running at <span class="text-sky-400">http://localhost:3000</span></div>
+              <div class="text-slate-500">API available at <span class="text-sky-400">http://localhost:3000/api</span></div>
+              <div class="mt-1 text-slate-600"># Full CRUD, visual pipeline editor,</div>
+              <div class="text-slate-600"># real-time publishing status</div>
+            </div>
+          </div>
+        </div>
+        <!-- MCP -->
+        <div class="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6 card-hover">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="flex items-center justify-center w-10 h-10 bg-amber-500/10 text-amber-400 rounded-xl text-lg">
+              ⚡
+            </span>
+            <div>
+              <h3 class="text-white font-semibold">MCP</h3>
+              <p class="text-sm text-slate-500">AI-powered via Model Context Protocol.</p>
+            </div>
+          </div>
+          <div class="terminal">
+            <div class="terminal-body text-xs">
+              <div class="text-slate-500"># In Claude Code / any MCP client:</div>
+              <div class="mt-1"><span class="text-amber-400">Claude:</span> Draft a post about Rust error handling</div>
+              <div class="text-slate-500 mt-1">→ contentforge.draft("Rust error handling")</div>
+              <div class="text-slate-500">→ contentforge.adapt(["twitter","linkedin"])</div>
+              <div class="text-slate-500">→ contentforge.publish()</div>
+              <div class="mt-1 text-green-400/80">✓ Published to 2 platforms</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Platforms -->
+  <section id="platforms" class="py-20 md:py-28 fade-in">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold text-white">Publish everywhere</h2>
+        <p class="mt-4 text-slate-400 text-lg">Six platform adapters. Format-aware. API-native.</p>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 max-w-3xl mx-auto">
+        <!-- DEV.to -->
+        <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5 text-center card-hover">
+          <div class="text-3xl mb-3">📝</div>
+          <h3 class="text-white font-semibold">DEV.to</h3>
+          <p class="text-xs text-slate-500 mt-1">Markdown + front matter</p>
+          <span class="inline-block mt-3 text-xs px-2.5 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20">Working</span>
+        </div>
+        <!-- Mastodon -->
+        <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5 text-center card-hover">
+          <div class="text-3xl mb-3">🐘</div>
+          <h3 class="text-white font-semibold">Mastodon</h3>
+          <p class="text-xs text-slate-500 mt-1">500 chars, any instance</p>
+          <span class="inline-block mt-3 text-xs px-2.5 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20">Working</span>
+        </div>
+        <!-- Bluesky -->
+        <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5 text-center card-hover">
+          <div class="text-3xl mb-3">🦋</div>
+          <h3 class="text-white font-semibold">Bluesky</h3>
+          <p class="text-xs text-slate-500 mt-1">300 chars, AT Protocol</p>
+          <span class="inline-block mt-3 text-xs px-2.5 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20">Working</span>
+        </div>
+        <!-- Twitter -->
+        <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5 text-center card-hover">
+          <div class="text-3xl mb-3">𝕏</div>
+          <h3 class="text-white font-semibold">Twitter / X</h3>
+          <p class="text-xs text-slate-500 mt-1">280 chars, threads</p>
+          <span class="inline-block mt-3 text-xs px-2.5 py-1 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">API Gated</span>
+        </div>
+        <!-- LinkedIn -->
+        <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5 text-center card-hover">
+          <div class="text-3xl mb-3">💼</div>
+          <h3 class="text-white font-semibold">LinkedIn</h3>
+          <p class="text-xs text-slate-500 mt-1">Professional tone</p>
+          <span class="inline-block mt-3 text-xs px-2.5 py-1 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">API Gated</span>
+        </div>
+        <!-- Medium -->
+        <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5 text-center card-hover">
+          <div class="text-3xl mb-3">✍️</div>
+          <h3 class="text-white font-semibold">Medium</h3>
+          <p class="text-xs text-slate-500 mt-1">Rich text, images</p>
+          <span class="inline-block mt-3 text-xs px-2.5 py-1 rounded-full bg-red-500/10 text-red-400 border border-red-500/20">Deprecated API</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MCP Integration -->
+  <section class="py-20 md:py-28 bg-slate-800/20 fade-in">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold text-white">Works with Claude Code</h2>
+        <p class="mt-4 text-slate-400 text-lg">Native MCP integration. Ask your AI assistant to publish for you.</p>
+      </div>
+      <div class="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+        <div>
+          <h3 class="text-white font-semibold mb-4">Setup (one command)</h3>
+          <div class="terminal">
+            <div class="terminal-bar">
+              <span class="terminal-dot bg-red-500/80"></span>
+              <span class="terminal-dot bg-yellow-500/80"></span>
+              <span class="terminal-dot bg-green-500/80"></span>
+              <span class="ml-3 text-xs text-slate-500">setup</span>
+            </div>
+            <div class="terminal-body text-sm">
+              <div><span class="text-green-400">$</span> contentforge mcp install</div>
+              <div class="mt-2 text-slate-500"># Or add to claude_desktop_config.json:</div>
+              <div class="text-slate-400">{</div>
+              <div class="pl-4 text-slate-400">"mcpServers": {</div>
+              <div class="pl-8 text-slate-400">"contentforge": {</div>
+              <div class="pl-12"><span class="text-brand-300">"command"</span>: <span class="text-yellow-300">"contentforge"</span>,</div>
+              <div class="pl-12"><span class="text-brand-300">"args"</span>: [<span class="text-yellow-300">"mcp"</span>, <span class="text-yellow-300">"serve"</span>]</div>
+              <div class="pl-8 text-slate-400">}</div>
+              <div class="pl-4 text-slate-400">}</div>
+              <div class="text-slate-400">}</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h3 class="text-white font-semibold mb-4">Example workflow</h3>
+          <div class="terminal">
+            <div class="terminal-bar">
+              <span class="terminal-dot bg-red-500/80"></span>
+              <span class="terminal-dot bg-yellow-500/80"></span>
+              <span class="terminal-dot bg-green-500/80"></span>
+              <span class="ml-3 text-xs text-slate-500">claude code</span>
+            </div>
+            <div class="terminal-body text-sm">
+              <div><span class="text-amber-400">You:</span> Write a post about our new Rust</div>
+              <div>     API and publish it everywhere.</div>
+              <div class="mt-3"><span class="text-brand-400">Claude:</span> I'll draft, adapt, and publish.</div>
+              <div class="mt-2 text-slate-500">→ Using <span class="text-brand-300">contentforge.draft</span></div>
+              <div class="text-slate-500">→ Using <span class="text-brand-300">contentforge.adapt</span></div>
+              <div class="text-slate-500">→ Using <span class="text-brand-300">contentforge.publish</span></div>
+              <div class="mt-2 text-green-400/80">✓ Published to 6 platforms.</div>
+              <div class="text-slate-400 mt-1">Here are the links: ...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pipeline Automation (Pro) -->
+  <section class="py-20 md:py-28 fade-in">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <div class="inline-flex items-center gap-2 bg-violet-500/10 border border-violet-500/20 text-violet-300 text-sm px-4 py-1.5 rounded-full mb-4">
+          Pro
+        </div>
+        <h2 class="text-3xl md:text-4xl font-bold text-white">Pipeline automation</h2>
+        <p class="mt-4 text-slate-400 text-lg">Automated content pipelines with approval flows and cron scheduling.</p>
+      </div>
+      <div class="max-w-4xl mx-auto">
+        <!-- Pipeline Flow -->
+        <div class="flex flex-col md:flex-row items-center justify-center gap-3 md:gap-0 mb-12">
+          <div class="bg-slate-800/60 border border-slate-700/50 rounded-xl px-5 py-3 text-center">
+            <div class="text-brand-400 text-sm font-mono font-bold">adapt</div>
+            <div class="text-xs text-slate-500 mt-1">Auto-format</div>
+          </div>
+          <div class="text-slate-600 text-2xl hidden md:block px-2">→</div>
+          <div class="text-slate-600 text-2xl md:hidden">↓</div>
+          <div class="bg-slate-800/60 border border-slate-700/50 rounded-xl px-5 py-3 text-center">
+            <div class="text-yellow-400 text-sm font-mono font-bold">review</div>
+            <div class="text-xs text-slate-500 mt-1">AI or human</div>
+          </div>
+          <div class="text-slate-600 text-2xl hidden md:block px-2">→</div>
+          <div class="text-slate-600 text-2xl md:hidden">↓</div>
+          <div class="bg-slate-800/60 border border-slate-700/50 rounded-xl px-5 py-3 text-center">
+            <div class="text-amber-400 text-sm font-mono font-bold">approve</div>
+            <div class="text-xs text-slate-500 mt-1">Gate check</div>
+          </div>
+          <div class="text-slate-600 text-2xl hidden md:block px-2">→</div>
+          <div class="text-slate-600 text-2xl md:hidden">↓</div>
+          <div class="bg-green-500/10 border border-green-500/20 rounded-xl px-5 py-3 text-center">
+            <div class="text-green-400 text-sm font-mono font-bold">publish</div>
+            <div class="text-xs text-slate-500 mt-1">All platforms</div>
+          </div>
+        </div>
+        <!-- Pipeline Config -->
+        <div class="terminal glow max-w-2xl mx-auto">
+          <div class="terminal-bar">
+            <span class="terminal-dot bg-red-500/80"></span>
+            <span class="terminal-dot bg-yellow-500/80"></span>
+            <span class="terminal-dot bg-green-500/80"></span>
+            <span class="ml-3 text-xs text-slate-500">contentforge.toml</span>
+          </div>
+          <div class="terminal-body text-sm">
+            <div class="text-slate-500"># Pipeline with cron scheduling</div>
+            <div><span class="text-brand-300">[pipeline.weekly-roundup]</span></div>
+            <div><span class="text-cyan-400">trigger</span>  = <span class="text-yellow-300">"cron: 0 9 * * MON"</span></div>
+            <div><span class="text-cyan-400">steps</span>    = [<span class="text-yellow-300">"adapt"</span>, <span class="text-yellow-300">"review"</span>, <span class="text-yellow-300">"approve"</span>, <span class="text-yellow-300">"publish"</span>]</div>
+            <div><span class="text-cyan-400">targets</span>  = [<span class="text-yellow-300">"twitter"</span>, <span class="text-yellow-300">"linkedin"</span>, <span class="text-yellow-300">"devto"</span>]</div>
+            <div><span class="text-cyan-400">approval</span> = <span class="text-yellow-300">"manual"</span>  <span class="text-slate-500"># or "auto"</span></div>
+            <div class="mt-3 text-slate-500"># Encrypted credentials</div>
+            <div><span class="text-brand-300">[credentials]</span></div>
+            <div><span class="text-cyan-400">store</span> = <span class="text-yellow-300">"encrypted"</span>  <span class="text-slate-500"># AES-256-GCM</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section id="pricing" class="py-20 md:py-28 bg-slate-800/20 fade-in">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold text-white">Simple pricing</h2>
+        <p class="mt-4 text-slate-400 text-lg">Free forever for individuals. Pro for teams and automation.</p>
+      </div>
+      <div class="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+        <!-- Free -->
+        <div class="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-8">
+          <h3 class="text-white font-bold text-xl">Free</h3>
+          <p class="text-slate-500 text-sm mt-1">Everything you need to get started</p>
+          <div class="mt-6 mb-8">
+            <span class="text-4xl font-bold text-white">$0</span>
+            <span class="text-slate-500">/forever</span>
+          </div>
+          <ul class="space-y-3 text-sm text-slate-300">
+            <li class="flex items-center gap-2.5"><span class="text-green-400">✓</span> Full CRUD operations</li>
+            <li class="flex items-center gap-2.5"><span class="text-green-400">✓</span> All 6 platform adapters</li>
+            <li class="flex items-center gap-2.5"><span class="text-green-400">✓</span> CLI + TUI + Web + MCP</li>
+            <li class="flex items-center gap-2.5"><span class="text-green-400">✓</span> One-off scheduling</li>
+            <li class="flex items-center gap-2.5"><span class="text-green-400">✓</span> Open source (MIT)</li>
+            <li class="flex items-center gap-2.5"><span class="text-green-400">✓</span> Community support</li>
+          </ul>
+          <a href="#install" class="block mt-8 text-center py-3 px-6 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-xl transition">
+            Install Free
+          </a>
+        </div>
+        <!-- Pro -->
+        <div class="bg-brand-500/5 border border-brand-500/30 rounded-2xl p-8 relative">
+          <div class="absolute -top-3 right-6 bg-brand-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+            POPULAR
+          </div>
+          <h3 class="text-white font-bold text-xl">Pro</h3>
+          <p class="text-slate-500 text-sm mt-1">For teams and serious publishers</p>
+          <div class="mt-6 mb-8">
+            <span class="text-4xl font-bold text-white">$9</span>
+            <span class="text-slate-500">/mo</span>
+            <span class="text-slate-600 text-sm ml-2">or $99/yr</span>
+          </div>
+          <ul class="space-y-3 text-sm text-slate-300">
+            <li class="flex items-center gap-2.5"><span class="text-brand-400">✓</span> Everything in Free</li>
+            <li class="flex items-center gap-2.5"><span class="text-brand-400">✓</span> Pipeline automation</li>
+            <li class="flex items-center gap-2.5"><span class="text-brand-400">✓</span> Cron scheduling</li>
+            <li class="flex items-center gap-2.5"><span class="text-brand-400">✓</span> Approval workflows</li>
+            <li class="flex items-center gap-2.5"><span class="text-brand-400">✓</span> Encrypted credentials (AES-256)</li>
+            <li class="flex items-center gap-2.5"><span class="text-brand-400">✓</span> Priority support</li>
+          </ul>
+          <a href="https://buy.stripe.com/contentforge-pro" target="_blank" class="block mt-8 text-center py-3 px-6 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl transition shadow-lg shadow-brand-500/25">
+            Get Pro
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Install -->
+  <section id="install" class="py-20 md:py-28 fade-in">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold text-white">Get started in seconds</h2>
+        <p class="mt-4 text-slate-400 text-lg">Three ways to install. Zero dependencies.</p>
+      </div>
+      <div class="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+        <!-- curl -->
+        <div class="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="w-2 h-2 bg-green-400 rounded-full"></span>
+            <h3 class="text-white font-semibold text-sm">Recommended</h3>
+          </div>
+          <div class="terminal">
+            <div class="terminal-body text-xs">
+              <div class="text-slate-500"># One-line install</div>
+              <div class="mt-1"><span class="text-green-400">$</span> curl <span class="text-cyan-400">-fsSL</span> \</div>
+              <div class="pl-4 text-yellow-300 break-all">https://raw.githubusercontent.com/mbaneshi-labs/contentforge/main/install.sh</div>
+              <div class="pl-4">| sh</div>
+            </div>
+          </div>
+        </div>
+        <!-- cargo -->
+        <div class="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="w-2 h-2 bg-amber-400 rounded-full"></span>
+            <h3 class="text-white font-semibold text-sm">Cargo</h3>
+          </div>
+          <div class="terminal">
+            <div class="terminal-body text-xs">
+              <div class="text-slate-500"># With Rust toolchain</div>
+              <div class="mt-1"><span class="text-green-400">$</span> cargo install \</div>
+              <div class="pl-4">contentforge</div>
+            </div>
+          </div>
+        </div>
+        <!-- source -->
+        <div class="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="w-2 h-2 bg-slate-400 rounded-full"></span>
+            <h3 class="text-white font-semibold text-sm">From Source</h3>
+          </div>
+          <div class="terminal">
+            <div class="terminal-body text-xs">
+              <div><span class="text-green-400">$</span> git clone \</div>
+              <div class="pl-2 text-yellow-300 break-all">github.com/mbaneshi-labs/contentforge</div>
+              <div><span class="text-green-400">$</span> cd contentforge</div>
+              <div><span class="text-green-400">$</span> cargo build <span class="text-cyan-400">--release</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="text-center mt-10">
+        <p class="text-slate-500 text-sm">
+          Supports <span class="text-slate-400">Linux (x86_64, aarch64)</span> &middot;
+          <span class="text-slate-400">macOS (Intel, Apple Silicon)</span> &middot;
+          <span class="text-slate-400">Windows (x86_64)</span>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800/60 py-12">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="flex items-center gap-6">
+          <a href="#" class="flex items-center gap-2 text-white font-bold tracking-tight">
+            <span class="text-brand-400">⚒</span> ContentForge
+          </a>
+          <div class="flex items-center gap-4 text-sm text-slate-500">
+            <a href="https://github.com/mbaneshi-labs/contentforge" target="_blank" class="hover:text-slate-300 transition">GitHub</a>
+            <a href="https://mbaneshi-labs.github.io/contentforge/" target="_blank" class="hover:text-slate-300 transition">Docs</a>
+            <a href="https://github.com/mbaneshi-labs/contentforge/blob/main/LICENSE" target="_blank" class="hover:text-slate-300 transition">MIT License</a>
+          </div>
+        </div>
+        <div class="flex items-center gap-4">
+          <span class="inline-flex items-center gap-1.5 text-xs text-slate-500 bg-slate-800/60 border border-slate-700/50 px-3 py-1.5 rounded-full">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path d="M128.09 0C57.3 0 0 57.3 0 128.09c0 47.42 25.77 88.77 64.12 110.94l5.1-29.36c-23.5-17.57-38.78-45.67-38.78-77.58 0-53.69 43.53-97.22 97.22-97.22s97.22 43.53 97.22 97.22c0 31.51-15.01 59.53-38.27 77.17l5.03 29.66C229.64 217.39 256 175.8 256 128.09 256 57.3 198.7 0 128.09 0z" fill="#DEA584"/>
+            </svg>
+            Built with Rust
+          </span>
+        </div>
+      </div>
+      <div class="mt-8 text-center text-xs text-slate-600">
+        &copy; 2025&ndash;2026 ContentForge contributors. Open source under the MIT License.
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Mobile menu toggle
+    document.getElementById('mobile-toggle').addEventListener('click', function() {
+      document.getElementById('mobile-menu').classList.toggle('hidden');
+    });
+
+    // Close mobile menu on link click
+    document.querySelectorAll('#mobile-menu a').forEach(function(link) {
+      link.addEventListener('click', function() {
+        document.getElementById('mobile-menu').classList.add('hidden');
+      });
+    });
+
+    // Fade-in on scroll
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.fade-in').forEach(function(el) {
+      observer.observe(el);
+    });
+
+    // Copy to clipboard for terminal blocks
+    document.querySelectorAll('.terminal').forEach(function(terminal) {
+      terminal.style.position = 'relative';
+      terminal.style.cursor = 'pointer';
+      terminal.title = 'Click to copy';
+
+      terminal.addEventListener('click', function() {
+        var body = terminal.querySelector('.terminal-body');
+        if (!body) return;
+        var text = body.innerText.replace(/^\$\s*/gm, '').replace(/^#.*$/gm, '').trim();
+        navigator.clipboard.writeText(text).then(function() {
+          var old = terminal.title;
+          terminal.title = 'Copied!';
+          setTimeout(function() { terminal.title = old; }, 1500);
+        });
+      });
+    });
+  </script>
+
+</body>
+</html>
