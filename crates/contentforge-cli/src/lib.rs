@@ -58,8 +58,59 @@ pub enum CliCommand {
         #[command(subcommand)]
         action: PlatformAction,
     },
+    /// Run, list, and manage automated pipelines.
+    Pipeline {
+        #[command(subcommand)]
+        action: PipelineAction,
+    },
     /// Show the current content pipeline overview.
     Status,
+}
+
+// ---------------------------------------------------------------------------
+// Pipeline subcommands
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Subcommand)]
+pub enum PipelineAction {
+    /// Run a pipeline on a content item.
+    Run {
+        /// Content UUID (or short prefix).
+        content_id: String,
+        /// Pipeline name (publish-all, adapt-review-publish).
+        #[arg(short = 'P', long, default_value = "publish-all")]
+        pipeline: String,
+        /// Target platforms (comma-separated). Default: all configured.
+        #[arg(short, long)]
+        platforms: Option<String>,
+        /// Skip the review/approval step.
+        #[arg(long)]
+        skip_review: bool,
+    },
+    /// List pipeline jobs.
+    List {
+        /// Filter by status.
+        #[arg(short, long)]
+        status: Option<String>,
+    },
+    /// Show details of a specific job.
+    Show {
+        /// Job UUID (or short prefix).
+        id: String,
+    },
+    /// Approve a job awaiting review.
+    Approve {
+        /// Job UUID (or short prefix).
+        id: String,
+    },
+    /// Reject a job awaiting review.
+    Reject {
+        /// Job UUID (or short prefix).
+        id: String,
+        /// Reason for rejection.
+        #[arg(short, long)]
+        reason: String,
+    },
 }
 
 // ---------------------------------------------------------------------------
@@ -177,6 +228,7 @@ pub async fn execute(cmd: CliCommand, db: DbPool) -> Result<()> {
         CliCommand::Publish { id, platform } => handle_publish(&id, &platform, &db).await,
         CliCommand::Schedule { action } => handle_schedule(action, &db).await,
         CliCommand::Platforms { action } => handle_platforms(action, &db).await,
+        CliCommand::Pipeline { action } => handle_pipeline(action, &db).await,
         CliCommand::Status => handle_status(&db).await,
     }
 }
@@ -785,6 +837,176 @@ async fn handle_status(db: &DbPool) -> Result<()> {
 
 // ---------------------------------------------------------------------------
 // Utility: resolve short UUID prefix to full UUID
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Pipeline handlers
+// ---------------------------------------------------------------------------
+
+async fn handle_pipeline(action: PipelineAction, db: &DbPool) -> Result<()> {
+    let queue = contentforge_pipeline::JobQueue::new(db.clone());
+
+    match action {
+        PipelineAction::Run {
+            content_id,
+            pipeline,
+            platforms,
+            skip_review,
+        } => {
+            let uuid = resolve_uuid(&content_id, db)?;
+
+            let platform_list: Vec<String> = platforms
+                .map(|p| p.split(',').map(|s| s.trim().to_string()).collect())
+                .unwrap_or_else(|| vec!["devto".to_string()]);
+
+            let payload = serde_json::json!({
+                "platforms": platform_list,
+                "skip_review": skip_review,
+            });
+
+            let job = queue.enqueue(
+                &pipeline,
+                "adapt", // first step
+                Some(uuid),
+                None,
+                None,
+                payload,
+                None,
+            )?;
+
+            let short_id = &job.id.to_string()[..8];
+            println!("Pipeline '{pipeline}' started");
+            println!("  Job ID:    {short_id}");
+            println!("  Content:   {}", &content_id[..8.min(content_id.len())]);
+            println!("  Platforms: {}", platform_list.join(", "));
+            if skip_review {
+                println!("  Review:    skipped");
+            }
+            println!("\nTrack: contentforge pipeline show {short_id}");
+        }
+
+        PipelineAction::List { status } => {
+            let jobs = queue.list(status.as_deref(), None, 20)?;
+
+            if jobs.is_empty() {
+                println!("No pipeline jobs.");
+                println!("\nStart one:");
+                println!("  contentforge pipeline run <content_id>");
+                return Ok(());
+            }
+
+            println!(
+                "{:<10} {:<20} {:<10} {:<15} {:<10} CREATED",
+                "ID", "PIPELINE", "STEP", "STATUS", "ATTEMPTS"
+            );
+            println!("{}", "-".repeat(85));
+
+            for job in &jobs {
+                let short_id = &job.id.to_string()[..8];
+                println!(
+                    "{:<10} {:<20} {:<10} {:<15} {:<10} {}",
+                    short_id,
+                    job.pipeline,
+                    job.step,
+                    job.status,
+                    format!("{}/{}", job.attempts, job.max_retries),
+                    job.created_at.format("%Y-%m-%d %H:%M")
+                );
+            }
+            println!("\n{} job(s)", jobs.len());
+        }
+
+        PipelineAction::Show { id } => {
+            let uuid = resolve_job_uuid(&id, db)?;
+            let job = queue
+                .get(uuid)?
+                .ok_or_else(|| anyhow::anyhow!("Job not found: {id}"))?;
+
+            println!("=== Pipeline Job ===");
+            println!("ID:        {}", job.id);
+            println!("Pipeline:  {}", job.pipeline);
+            println!("Step:      {}", job.step);
+            println!("Status:    {}", job.status);
+            if let Some(ref project) = job.project {
+                println!("Project:   {project}");
+            }
+            if let Some(ref platform) = job.platform {
+                println!("Platform:  {platform}");
+            }
+            if let Some(content_id) = job.content_id {
+                println!("Content:   {}", &content_id.to_string()[..8]);
+            }
+            println!("Attempts:  {}/{}", job.attempts, job.max_retries);
+            println!("Created:   {}", job.created_at.format("%Y-%m-%d %H:%M"));
+            if let Some(ref err) = job.error {
+                println!("Error:     {err}");
+            }
+            if let Some(ref result) = job.result {
+                println!("Result:    {}", serde_json::to_string_pretty(result)?);
+            }
+        }
+
+        PipelineAction::Approve { id } => {
+            let uuid = resolve_job_uuid(&id, db)?;
+            let job = queue
+                .get(uuid)?
+                .ok_or_else(|| anyhow::anyhow!("Job not found: {id}"))?;
+
+            if job.status != contentforge_pipeline::JobStatus::AwaitingReview {
+                bail!(
+                    "Job {} is not awaiting review (status: {})",
+                    &id[..8.min(id.len())],
+                    job.status
+                );
+            }
+
+            queue.approve(uuid)?;
+
+            // Enqueue the next step (publish)
+            queue.enqueue(
+                &job.pipeline,
+                "publish",
+                job.content_id,
+                job.project.as_deref(),
+                job.platform.as_deref(),
+                job.payload.clone(),
+                Some(job.id),
+            )?;
+
+            println!("Approved: {}", &id[..8.min(id.len())]);
+            println!("Publishing will begin shortly.");
+        }
+
+        PipelineAction::Reject { id, reason } => {
+            let uuid = resolve_job_uuid(&id, db)?;
+            queue.reject(uuid, &reason)?;
+            println!("Rejected: {} — {reason}", &id[..8.min(id.len())]);
+        }
+    }
+
+    Ok(())
+}
+
+fn resolve_job_uuid(id: &str, db: &DbPool) -> Result<Uuid> {
+    if let Ok(uuid) = Uuid::parse_str(id) {
+        return Ok(uuid);
+    }
+    let conn = db.lock().map_err(|e| anyhow::anyhow!("{e}"))?;
+    let mut stmt = conn.prepare("SELECT id FROM jobs WHERE id LIKE ?1")?;
+    let pattern = format!("{id}%");
+    let matches: Vec<String> = stmt
+        .query_map([pattern], |row| row.get(0))?
+        .collect::<std::result::Result<Vec<_>, _>>()?;
+
+    match matches.len() {
+        0 => bail!("No job found matching '{id}'"),
+        1 => Ok(Uuid::parse_str(&matches[0])?),
+        n => bail!("Ambiguous job ID '{id}' matches {n} items."),
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Utility: resolve short content UUID prefix
 // ---------------------------------------------------------------------------
 
 fn resolve_uuid(id: &str, db: &DbPool) -> Result<Uuid> {

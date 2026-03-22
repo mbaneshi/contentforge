@@ -1,6 +1,6 @@
 [package]
-name = "contentforge-cli"
-description = "CLI subcommands for ContentForge"
+name = "contentforge-pipeline"
+description = "Pipeline engine for ContentForge — job queue, worker, state machine, retry"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -10,12 +10,14 @@ license.workspace = true
 contentforge-core = { path = "../contentforge-core" }
 contentforge-db = { path = "../contentforge-db" }
 contentforge-publish = { path = "../contentforge-publish" }
-contentforge-pipeline = { path = "../contentforge-pipeline" }
 
-clap = { workspace = true }
 tokio = { workspace = true }
+serde = { workspace = true }
 serde_json = { workspace = true }
-anyhow = { workspace = true }
-tracing = { workspace = true }
-uuid = { workspace = true }
 chrono = { workspace = true }
+uuid = { workspace = true }
+tracing = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+rusqlite = { workspace = true }
+toml = "0.8"

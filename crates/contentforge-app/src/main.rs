@@ -80,6 +80,11 @@ enum Command {
         #[command(subcommand)]
         action: contentforge_cli::PlatformAction,
     },
+    /// Run, list, and manage automated pipelines (Pro feature).
+    Pipeline {
+        #[command(subcommand)]
+        action: contentforge_cli::PipelineAction,
+    },
     /// Show the current content pipeline overview.
     Status,
 }
@@ -144,6 +149,9 @@ async fn main() -> Result<()> {
         }
         Some(Command::Platforms { action }) => {
             contentforge_cli::execute(CliCommand::Platforms { action }, db).await
+        }
+        Some(Command::Pipeline { action }) => {
+            contentforge_cli::execute(CliCommand::Pipeline { action }, db).await
         }
         Some(Command::Status) => contentforge_cli::execute(CliCommand::Status, db).await,
     }

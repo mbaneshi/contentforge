@@ -11,6 +11,7 @@ members = [
     "crates/contentforge-schedule",
     "crates/contentforge-analytics",
     "crates/contentforge-mcp",
+    "crates/contentforge-pipeline",
     "crates/contentforge-app",
 ]
 
@@ -74,6 +75,9 @@ thiserror = "2"
 
 # UUID
 uuid = { version = "1", features = ["v4", "serde"] }
+
+# TOML parsing
+toml = "0.8"
 
 # Markdown
 pulldown-cmark = "0.12"
