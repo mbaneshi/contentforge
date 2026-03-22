@@ -1,0 +1,44 @@
+{
+  "name": "contentforge",
+  "version": "0.1.0",
+  "description": "Developer content pipeline — draft, adapt, schedule, and publish to DEV.to, Mastodon, Bluesky, Twitter, LinkedIn from your AI assistant.",
+  "repository": "https://github.com/mbaneshi-labs/contentforge",
+  "homepage": "https://mbaneshi-labs.github.io/contentforge/",
+  "license": "MIT",
+  "author": "Mehdi Baneshi <baneshi@gmail.com>",
+  "transport": ["stdio"],
+  "command": "contentforge",
+  "args": ["mcp"],
+  "tools": [
+    {
+      "name": "draft_content",
+      "description": "Create a new content draft with title, body, tags, and project."
+    },
+    {
+      "name": "list_content",
+      "description": "List content items in the pipeline, optionally filtered by status (idea, drafting, ready, published)."
+    },
+    {
+      "name": "show_content",
+      "description": "Show full details of a content item including adaptations and publications."
+    },
+    {
+      "name": "adapt_content",
+      "description": "Adapt content for a specific platform (devto, mastodon, bluesky, twitter, linkedin)."
+    },
+    {
+      "name": "publish_content",
+      "description": "Publish adapted content to a platform."
+    },
+    {
+      "name": "schedule_content",
+      "description": "Schedule content for publication at a specific future time."
+    },
+    {
+      "name": "pipeline_status",
+      "description": "Show current pipeline status: content counts by stage, configured platforms, recent publications."
+    }
+  ],
+  "categories": ["social-media", "content", "publishing", "developer-tools"],
+  "tags": ["content-creation", "social-media", "cross-posting", "scheduling", "devto", "mastodon", "bluesky", "twitter", "linkedin", "rust", "cli", "tui"]
+}

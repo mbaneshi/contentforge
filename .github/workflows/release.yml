@@ -33,19 +33,12 @@ jobs:
         include:
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
-            archive: tar.gz
           - target: aarch64-unknown-linux-gnu
             os: ubuntu-latest
-            archive: tar.gz
           - target: x86_64-apple-darwin
-            os: macos-latest
-            archive: tar.gz
+            os: macos-13
           - target: aarch64-apple-darwin
             os: macos-latest
-            archive: tar.gz
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
-            archive: zip
     steps:
       - uses: actions/checkout@v4
 
@@ -63,41 +56,25 @@ jobs:
         with:
           key: ${{ matrix.target }}
 
+      - name: Create frontend build placeholder
+        run: mkdir -p frontend/build && echo '<html><body>placeholder</body></html>' > frontend/build/index.html
+
       - name: Build
         run: cargo build --release --target ${{ matrix.target }}
         env:
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
 
-      - name: Package (unix)
-        if: matrix.archive == 'tar.gz'
+      - name: Package
         run: |
           cd target/${{ matrix.target }}/release
           tar czf ../../../contentforge-${{ matrix.target }}.tar.gz contentforge
           cd ../../..
+          shasum -a 256 contentforge-${{ matrix.target }}.tar.gz > contentforge-${{ matrix.target }}.tar.gz.sha256
 
-      - name: Package (windows)
-        if: matrix.archive == 'zip'
-        shell: pwsh
-        run: |
-          Compress-Archive -Path target/${{ matrix.target }}/release/contentforge.exe -DestinationPath contentforge-${{ matrix.target }}.zip
-
-      - name: Upload release asset
+      - name: Upload release assets
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.release-please.outputs.tag_name }}
-          files: contentforge-${{ matrix.target }}.${{ matrix.archive }}
-
-  update-homebrew:
-    name: Update Homebrew
-    needs: [release-please, build-binaries]
-    if: ${{ needs.release-please.outputs.release_created == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Update Homebrew formula
-        uses: dawidd6/action-homebrew-bump-formula@v4
-        continue-on-error: true
-        with:
-          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
-          tap: mbaneshi/tap
-          formula: contentforge
-          tag: ${{ needs.release-please.outputs.tag_name }}
+          files: |
+            contentforge-${{ matrix.target }}.tar.gz
+            contentforge-${{ matrix.target }}.tar.gz.sha256

@@ -1,148 +1,123 @@
 <p align="center">
   <h1 align="center">ContentForge</h1>
-  <p align="center">A Rust-native content creation and multi-platform publishing platform. Single binary. TUI + Web + CLI + MCP.</p>
+  <p align="center">A Rust-native content creation and multi-platform publishing platform.<br>Single binary. CLI + TUI + Web + MCP.</p>
 </p>
 
 <p align="center">
   <a href="https://github.com/mbaneshi-labs/contentforge/actions/workflows/ci.yml"><img src="https://github.com/mbaneshi-labs/contentforge/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <img src="https://img.shields.io/badge/rust-1.80%2B-orange.svg" alt="Rust 1.80+">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
+  <img src="https://img.shields.io/badge/platforms-6-brightgreen.svg" alt="6 Platforms">
 </p>
 
 ---
 
+## What is ContentForge?
+
+Write content once. Adapt for each platform. Publish everywhere — from your terminal, a web dashboard, or your AI assistant via MCP.
+
+```bash
+# The hero workflow
+contentforge draft create "What I shipped this week" --body "..." --tags "rust,ai"
+contentforge adapt <id> --platform devto
+contentforge adapt <id> --platform mastodon
+contentforge adapt <id> --platform bluesky
+contentforge publish <id> --platform devto   # → live on DEV.to
+
+# Or let the pipeline do it all
+contentforge pipeline run <id> --platforms devto,mastodon,bluesky --skip-review
+
+# Or use Claude Code via MCP
+# Claude: "Draft a post about my latest Rust project and publish to DEV.to and Bluesky"
+```
+
 ## Why ContentForge?
 
-You write a blog post. Now you need a tweet thread, a LinkedIn post, a DEV.to cross-post, and a Medium article -- each with different formatting, character limits, and tone. ContentForge lets you write once, adapt everywhere, and publish from a single binary with no external services required.
-
-## Feature Highlights
-
-- **Single binary** -- one `contentforge` binary runs CLI, TUI, Web UI, API server, and MCP server
-- **Write once, publish everywhere** -- create content in Markdown, auto-adapt to each platform's constraints
-- **Local-first** -- SQLite database, no cloud dependency, your data stays on your machine
-- **AI-native** -- built-in LLM agent pipeline for drafting, adapting, thread splitting, and review
-- **MCP server** -- use ContentForge as a tool from Claude Code or any MCP-compatible AI assistant
-- **Scheduling engine** -- queue posts for optimal timing with cron-based recurring schedules
-- **Analytics tracking** -- pull engagement metrics back from each platform into one dashboard
-- **Privacy-respecting** -- credentials stored locally, no telemetry, no third-party analytics
-
-## Architecture
-
-```
-                         ┌─────────────┐
-                         │   Claude /   │
-                         │  MCP Client  │
-                         └──────┬───────┘
-                                │ MCP (stdio/SSE)
-                                │
-┌──────────┐  ┌──────────┐  ┌──┴───────┐
-│   TUI    │  │ SvelteKit│  │   CLI    │
-│ (ratatui)│  │  Web UI  │  │  (clap)  │
-└────┬─────┘  └────┬─────┘  └────┬─────┘
-     │             │              │
-     └─────────────┼──────────────┘
-                   │
-            ┌──────┴──────┐
-            │  Axum API   │
-            │   Server    │
-            └──────┬──────┘
-                   │
-     ┌─────────────┼─────────────┐
-     │             │             │
-┌────┴────┐  ┌────┴────┐  ┌────┴─────┐
-│  Core   │  │   AI    │  │ Schedule │
-│ Domain  │  │  Agent  │  │  Engine  │
-└────┬────┘  └─────────┘  └──────────┘
-     │
-┌────┴────────────────────────────────┐
-│          Platform Adapters          │
-├─────────┬──────────┬────────┬───────┤
-│ Twitter │ LinkedIn │ DEV.to │Medium │
-│ YouTube │Instagram │ Reddit │ HN    │
-└─────────┴──────────┴────────┴───────┘
-     │
-┌────┴────┐
-│ SQLite  │
-│ (WAL)   │
-└─────────┘
-```
+| Problem | ContentForge |
+|---------|-------------|
+| Content scattered across 5+ platforms | Write once, adapt per platform |
+| Manual copy-paste for cross-posting | CLI/TUI/Web/MCP — automate everything |
+| Complex self-hosting (Docker + PG + Redis) | Single binary + SQLite, zero config |
+| No developer-native tools (all web dashboards) | CLI-first, git-friendly, terminal-native |
+| Existing tools don't work with AI assistants | Built-in MCP server for Claude Code |
 
 ## Quick Start
 
-### Install via Homebrew (macOS / Linux)
+### Install
 
 ```bash
-brew install mbaneshi/tap/contentforge
-```
-
-### Install via Cargo
-
-```bash
-cargo install contentforge
-```
-
-### Build from Source
-
-```bash
+# From source (recommended for now)
 git clone https://github.com/mbaneshi-labs/contentforge.git
 cd contentforge
 cargo build --release
-# Binary is at target/release/contentforge
+# Binary: target/release/contentforge
+
+# Or via the install script
+curl -fsSL https://raw.githubusercontent.com/mbaneshi-labs/contentforge/main/install.sh | bash
 ```
 
-## Usage
-
-### CLI
+### First Content Piece (2 minutes)
 
 ```bash
-# Create a new content piece
-contentforge new --title "Rust Error Handling" --type article
+# 1. Create a draft
+contentforge draft create "I built a content pipeline in Rust" \
+  --body "## Why\n\nI was tired of copy-pasting to 5 platforms..." \
+  --tags "rust,devtools,opensource"
 
-# List all drafts
-contentforge list --status drafting
+# 2. Add your DEV.to API key (once)
+contentforge platforms add devto --key <YOUR_DEVTO_API_KEY>
 
-# Adapt content for a platform
-contentforge adapt <content-id> --platform twitter
+# 3. Adapt and publish
+contentforge adapt <id> --platform devto
+contentforge publish <id> --platform devto
+# → Your post is live on DEV.to
+```
 
-# Publish to a specific platform
-contentforge publish <content-id> --platform devto
+### Pipeline Automation
 
-# Publish to all adapted platforms
-contentforge publish <content-id> --all
+```bash
+# Run a full pipeline: adapt → review → approve → publish
+contentforge pipeline run <id> --pipeline adapt-review-publish --platforms devto,mastodon
 
-# Schedule for later
-contentforge schedule <content-id> --platform twitter --at "2026-03-20T09:00:00Z"
+# Check status
+contentforge pipeline list
 
-# Check platform health
-contentforge platforms health
+# Approve when ready
+contentforge pipeline approve <job_id>
+```
+
+## Interfaces
+
+### CLI
+```bash
+contentforge draft create/list/show/delete    # Content CRUD
+contentforge adapt <id> --platform <platform> # Adapt for a platform
+contentforge publish <id> --platform <platform>  # Publish
+contentforge pipeline run/list/show/approve/reject  # Automated pipelines
+contentforge platforms add/list/remove/check  # Manage credentials
+contentforge status                           # Pipeline overview
 ```
 
 ### TUI (Terminal UI)
-
 ```bash
-# Launch the interactive TUI
 contentforge tui
+# 5 tabs: Dashboard | Drafts | Adapt | Publish | Platforms
+# Navigate: Tab/1-5, j/k, Enter, q to quit, ? for help
 ```
-
-The TUI provides a full dashboard with content list, editor, platform status, and schedule overview -- all navigable with keyboard shortcuts.
 
 ### Web UI
-
 ```bash
-# Start the web server (serves embedded SvelteKit frontend)
-contentforge serve --port 3000
+contentforge serve --bind 127.0.0.1:3000
+# Dashboard, draft editor, publish controls, analytics
 ```
 
-Open `http://localhost:3000` for a rich web interface with drag-and-drop scheduling, live preview, and analytics charts.
-
-### MCP Server (for Claude Code)
-
+### MCP Server (for Claude Code / Claude Desktop)
 ```bash
-# Start as MCP server over stdio (add to Claude Code config)
-contentforge mcp
-```
+# Add to Claude Code
+claude mcp add contentforge -- contentforge mcp
 
-Add to your Claude Code MCP configuration:
+# Or manually in ~/.claude.json
+```
 
 ```json
 {
@@ -155,67 +130,70 @@ Add to your Claude Code MCP configuration:
 }
 ```
 
-Then ask Claude: *"Create a tweet thread about Rust error handling and publish it to Twitter."*
+**Available MCP tools:**
+| Tool | What It Does |
+|------|-------------|
+| `draft_content` | Create a new draft |
+| `list_content` | List content by status |
+| `show_content` | Full content details |
+| `adapt_content` | Adapt for a platform |
+| `publish_content` | Publish to a platform |
+| `schedule_content` | Schedule for later |
+| `pipeline_status` | Pipeline overview |
 
 ## Supported Platforms
 
-| Platform      | Status     | Auth Method          | Features                        |
-|---------------|------------|----------------------|---------------------------------|
-| DEV.to        | Ready      | API Key              | Articles, tags, series, canonical URL |
-| Twitter/X     | Ready      | OAuth 2.0 / Bearer   | Tweets, threads, media          |
-| LinkedIn      | Ready      | OAuth 2.0            | Posts, articles                 |
-| Medium        | Ready      | Integration Token    | Articles, tags, canonical URL   |
-| YouTube       | Planned    | OAuth 2.0            | Video descriptions, metadata    |
-| Instagram     | Planned    | Graph API            | Image posts, captions           |
-| Substack      | Planned    | Cookie (fragile)     | Long-form articles              |
-| Reddit        | Planned    | OAuth 2.0            | Posts, comments                 |
-| Hacker News   | Planned    | Cookie               | Story submissions               |
+| Platform | Status | Auth | Notes |
+|----------|--------|------|-------|
+| **DEV.to** | Working | API Key | Free, stable, markdown-native |
+| **Mastodon** | Working | OAuth per-instance | Free, 500 char limit, FOSS community |
+| **Bluesky** | Working | Handle + App Password | Free, 300 char limit, growing dev audience |
+| **Twitter/X** | Working | OAuth 2.0 / Bearer | $100+/mo for write access (user brings own keys) |
+| **LinkedIn** | Working | OAuth 2.0 | Requires LinkedIn Partner approval for write |
+| **Medium** | Deprecated | Integration Token | API deprecated in 2026, limited support |
 
-## Tech Stack
+## Architecture
 
-| Component        | Technology                       |
-|------------------|----------------------------------|
-| Language         | Rust 1.80+                       |
-| Async Runtime    | Tokio                            |
-| Web Framework    | Axum 0.8                         |
-| Database         | SQLite (rusqlite, WAL mode)      |
-| TUI              | Ratatui + Crossterm              |
-| CLI              | Clap 4 (derive)                  |
-| Frontend         | SvelteKit (embedded via rust-embed) |
-| AI/LLM           | rig-core                         |
-| MCP              | rmcp 0.16                        |
-| HTTP Client      | Reqwest (rustls)                 |
-| Scheduling       | cron 0.15                        |
-| Serialization    | serde + serde_json               |
-| Error Handling   | thiserror + anyhow               |
+```
+contentforge (single binary)
+├── CLI (clap)        ── draft/adapt/publish/pipeline/platforms/status
+├── TUI (ratatui)     ── 5-tab terminal dashboard
+├── Web (SvelteKit)   ── 8-page web UI via Axum
+├── API (Axum)        ── 12 REST endpoints + WebSocket
+├── MCP (rmcp)        ── 7 tools for AI assistant integration
+├── Pipeline Engine   ── Job queue + worker + retry + approval
+├── 6 Adapters        ── DEV.to, Mastodon, Bluesky, Twitter, LinkedIn, Medium
+└── SQLite (WAL)      ── Zero-config persistence
+```
 
-## Workspace Crate Map
+**12 Rust crates** in a clean workspace architecture:
 
-| Crate                      | Description                                              |
-|----------------------------|----------------------------------------------------------|
-| `contentforge-core`        | Domain types: Content, Platform, Schedule, errors         |
-| `contentforge-db`          | SQLite persistence, migrations, repository pattern        |
-| `contentforge-publish`     | Platform adapter trait (`Publisher`) and implementations   |
-| `contentforge-agent`       | AI agent pipeline: generate, adapt, split, review         |
-| `contentforge-schedule`    | Cron-based scheduling engine                              |
-| `contentforge-analytics`   | Engagement metrics collection and aggregation             |
-| `contentforge-api`         | Axum REST API + WebSocket server                          |
-| `contentforge-cli`         | Clap-based CLI interface                                  |
-| `contentforge-tui`         | Ratatui terminal UI                                       |
-| `contentforge-mcp`         | MCP server (stdio + SSE transport)                        |
-| `contentforge-app`         | Binary entry point, wires everything together             |
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, code conventions, and PR process.
+| Crate | Purpose |
+|-------|---------|
+| `contentforge-core` | Domain types, platform definitions, errors |
+| `contentforge-db` | SQLite persistence, migrations, repositories |
+| `contentforge-publish` | Publisher trait + 6 platform adapters |
+| `contentforge-pipeline` | Job queue, worker loop, retry, approval flow |
+| `contentforge-cli` | CLI commands and handlers |
+| `contentforge-tui` | Terminal UI with ratatui |
+| `contentforge-api` | Axum REST API + embedded SvelteKit |
+| `contentforge-mcp` | MCP server with 7 working tools |
+| `contentforge-agent` | AI content generation pipeline |
+| `contentforge-schedule` | Cron scheduling engine |
+| `contentforge-analytics` | Engagement metrics |
+| `contentforge-app` | Binary entry point |
 
 ## Documentation
 
-- [Architecture](docs/architecture/ARCHITECTURE.md) -- deep dive into system design
-- [North Star](NORTH_STAR.md) -- vision and product direction
-- [Roadmap](ROADMAP.md) -- phased development plan
-- [Full Documentation Site](https://mbaneshi.github.io/contentforge/) -- guides, reference, and tutorials
+- [Product Strategy](docs/PRODUCT_STRATEGY.md) — vision, pricing, go-to-market
+- [Build Plan](docs/BUILD_PLAN.md) — prioritized implementation plan
+- [Architecture](docs/architecture/ARCHITECTURE.md) — system design deep-dive
+- [Full Docs Site](https://mbaneshi-labs.github.io/contentforge/) — guides and reference
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, code conventions, and how to add a new platform adapter.
 
 ## License
 
-MIT -- see [LICENSE](LICENSE) for details.
+MIT — see [LICENSE](LICENSE) for details.
