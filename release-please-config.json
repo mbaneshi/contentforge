@@ -1,7 +1,7 @@
 {
   "packages": {
     ".": {
-      "release-type": "rust",
+      "release-type": "simple",
       "component": "contentforge",
       "changelog-path": "CHANGELOG.md",
       "bump-minor-pre-major": true,
@@ -9,7 +9,11 @@
       "draft": false,
       "prerelease": false,
       "extra-files": [
-        "Cargo.toml"
+        {
+          "type": "generic",
+          "path": "Cargo.toml",
+          "glob": false
+        }
       ]
     }
   },
