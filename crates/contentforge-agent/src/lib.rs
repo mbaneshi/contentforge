@@ -213,11 +213,7 @@ async fn claude_cli(config: &ClaudeCliConfig, prompt: &str) -> Result<String> {
                 stderr.trim()
             );
         }
-        anyhow::bail!(
-            "claude CLI failed ({}): {}",
-            output.status,
-            stderr.trim()
-        );
+        anyhow::bail!("claude CLI failed ({}): {}", output.status, stderr.trim());
     }
 
     let response = String::from_utf8(output.stdout)
@@ -327,18 +323,18 @@ impl ContentAdapter for ClaudeAdapter {
 
         let adapted = claude_cli(&self.config, &prompt).await?;
 
-        let thread_parts = if request.platform.supports_threads() && adapted.contains("---THREAD---")
-        {
-            Some(
-                adapted
-                    .split("---THREAD---")
-                    .map(|s| s.trim().to_string())
-                    .filter(|s| !s.is_empty())
-                    .collect(),
-            )
-        } else {
-            None
-        };
+        let thread_parts =
+            if request.platform.supports_threads() && adapted.contains("---THREAD---") {
+                Some(
+                    adapted
+                        .split("---THREAD---")
+                        .map(|s| s.trim().to_string())
+                        .filter(|s| !s.is_empty())
+                        .collect(),
+                )
+            } else {
+                None
+            };
 
         Ok(PlatformAdaptation {
             platform: request.platform,

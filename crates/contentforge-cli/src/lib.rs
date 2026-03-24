@@ -685,7 +685,15 @@ async fn handle_schedule(action: ScheduleAction, db: &DbPool) -> Result<()> {
                  ORDER BY s.scheduled_at ASC LIMIT 20",
             )?;
             #[allow(clippy::type_complexity)]
-            let rows: Vec<(String, String, String, String, String, i32, Option<String>)> = stmt
+            let rows: Vec<(
+                String,
+                String,
+                String,
+                String,
+                String,
+                i32,
+                Option<String>,
+            )> = stmt
                 .query_map([], |row| {
                     Ok((
                         row.get::<_, String>(0)?,
