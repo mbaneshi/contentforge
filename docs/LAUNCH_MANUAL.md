@@ -134,8 +134,8 @@ npx wrangler pages deploy /Users/bm/contentforge/landing --project-name contentf
 
 ```bash
 # Create a separate repo for the landing page
-gh repo create mbaneshi-labs/contentforge.dev --public
-cd /tmp && git clone git@github.com:mbaneshi-labs/contentforge.dev.git
+gh repo create mbaneshi/contentforge.dev --public
+cd /tmp && git clone git@github.com:mbaneshi/contentforge.dev.git
 cp /Users/bm/contentforge/landing/index.html /tmp/contentforge.dev/index.html
 cd /tmp/contentforge.dev
 git add . && git commit -m "Landing page" && git push
@@ -344,7 +344,7 @@ stripe trigger checkout.session.completed
 Name:        contentforge
 Description: Developer content pipeline — draft, adapt, schedule, and publish
              to DEV.to, Mastodon, Bluesky, Twitter, LinkedIn from your AI assistant.
-Repository:  https://github.com/mbaneshi-labs/contentforge
+Repository:  https://github.com/mbaneshi/contentforge
 Transport:   stdio
 Command:     contentforge mcp
 License:     MIT
@@ -401,7 +401,7 @@ gh release view v0.1.0
 
 1. Open: https://news.ycombinator.com/submit
 2. Title: `Show HN: ContentForge – A Rust CLI for multi-platform content publishing`
-3. URL: `https://github.com/mbaneshi-labs/contentforge`
+3. URL: `https://github.com/mbaneshi/contentforge`
 4. After posting, add this comment:
 
 ```
@@ -422,7 +422,7 @@ Key differentiators vs Postiz/Buffer/Typefully:
 
 Free and open source (MIT). Pro tier ($9/mo) for automation.
 
-GitHub: https://github.com/mbaneshi-labs/contentforge
+GitHub: https://github.com/mbaneshi/contentforge
 
 Happy to answer questions about the Rust architecture
 (12 crates, Axum, ratatui, SvelteKit, rmcp).
@@ -434,15 +434,15 @@ Happy to answer questions about the Rust architecture
 
 **r/rust:**
 - Title: `I built a multi-platform content publisher in Rust (12 crates, single binary)`
-- Link: https://github.com/mbaneshi-labs/contentforge
+- Link: https://github.com/mbaneshi/contentforge
 
 **r/selfhosted:**
 - Title: `ContentForge: self-hosted, single-binary content scheduler (SQLite, no Docker)`
-- Link: https://github.com/mbaneshi-labs/contentforge
+- Link: https://github.com/mbaneshi/contentforge
 
 **r/programming:**
 - Title: `Show r/programming: CLI tool for cross-platform content publishing`
-- Link: https://github.com/mbaneshi-labs/contentforge
+- Link: https://github.com/mbaneshi/contentforge
 
 **r/buildinpublic:**
 - Title: `I built ContentForge to solve my own content distribution problem — here's the architecture`
@@ -470,7 +470,7 @@ contentforge publish <id> --platform devto
 
 ```bash
 # Mastodon
-contentforge draft create "I just launched ContentForge — a Rust CLI for cross-platform content publishing. Write once, publish to DEV.to, Mastodon, Bluesky, and more. Single binary, zero config. GitHub: https://github.com/mbaneshi-labs/contentforge" --tags "rust,opensource"
+contentforge draft create "I just launched ContentForge — a Rust CLI for cross-platform content publishing. Write once, publish to DEV.to, Mastodon, Bluesky, and more. Single binary, zero config. GitHub: https://github.com/mbaneshi/contentforge" --tags "rust,opensource"
 contentforge adapt <id> --platform mastodon
 contentforge publish <id> --platform mastodon
 

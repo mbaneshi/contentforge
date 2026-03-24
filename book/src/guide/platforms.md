@@ -50,12 +50,13 @@ contentforge platforms add devto --api-key YOUR_API_KEY
 3. Under **Authentication**, set up OAuth 2.0 (User context) with the `tweet.read` and `tweet.write` scopes
 4. Generate a Bearer Token for app-only access, or complete the OAuth 2.0 flow for user context
 
-!!! warning "Twitter API Tiers"
-    - **Free tier:** 500 tweets/month, 1 app
-    - **Basic ($100/month):** 10,000 tweets/month
-    - **Pro ($5,000/month):** 300,000 tweets/month
-
-    ContentForge tracks rate limits and will report `RateLimited` errors with retry-after times.
+> **Warning: Twitter API Tiers**
+>
+> - **Free tier:** 500 tweets/month, 1 app
+> - **Basic ($100/month):** 10,000 tweets/month
+> - **Pro ($5,000/month):** 300,000 tweets/month
+>
+> ContentForge tracks rate limits and will report `RateLimited` errors with retry-after times.
 
 ### Configure
 
@@ -91,8 +92,9 @@ contentforge platforms add twitter --bearer-token YOUR_BEARER_TOKEN
 3. Under **Products**, request access to **Share on LinkedIn** and **Sign In with LinkedIn using OpenID Connect**
 4. Generate an OAuth 2.0 access token with the `w_member_social` scope
 
-!!! note "Access Token Expiry"
-    LinkedIn access tokens expire after 60 days. You will need to refresh them periodically. ContentForge will report `AuthFailed` when the token expires.
+> **Note: Access Token Expiry**
+>
+> LinkedIn access tokens expire after 60 days. You will need to refresh them periodically. ContentForge will report `AuthFailed` when the token expires.
 
 ### Find Your Author URN
 
@@ -140,8 +142,9 @@ contentforge platforms add linkedin \
 3. Enter a description and generate a token
 4. Copy the token
 
-!!! warning "Medium API Status"
-    The Medium API is officially deprecated but still functional for creating posts. There is no guarantee of continued availability. Medium does not support post deletion via API.
+> **Warning: Medium API Status**
+>
+> The Medium API is officially deprecated but still functional for creating posts. There is no guarantee of continued availability. Medium does not support post deletion via API.
 
 ### Configure
 

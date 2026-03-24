@@ -16,25 +16,25 @@ ContentForge lets you write content once in Markdown and publish adapted version
 
 ## Quick Install
 
-=== "Homebrew"
+### Homebrew
 
-    ```bash
-    brew install mbaneshi/tap/contentforge
-    ```
+```bash
+brew install mbaneshi/tap/contentforge
+```
 
-=== "Cargo"
+### Cargo
 
-    ```bash
-    cargo install contentforge
-    ```
+```bash
+cargo install contentforge
+```
 
-=== "From Source"
+### From Source
 
-    ```bash
-    git clone https://github.com/mbaneshi/contentforge.git
-    cd contentforge
-    cargo build --release
-    ```
+```bash
+git clone https://github.com/mbaneshi/contentforge.git
+cd contentforge
+cargo build --release
+```
 
 ## First Steps
 

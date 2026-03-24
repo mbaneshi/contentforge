@@ -21,8 +21,8 @@
 A Rust-native, single-binary content creation and multi-platform publishing platform.
 
 ```
-GitHub:  https://github.com/mbaneshi-labs/contentforge
-Docs:    https://mbaneshi-labs.github.io/contentforge/
+GitHub:  https://github.com/mbaneshi/contentforge
+Docs:    https://mbaneshi.github.io/contentforge/
 CI:      All green (Check, Clippy, Fmt, Test)
 Commits: 16 on main
 License: MIT

@@ -17,6 +17,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
       - uses: Swatinem/rust-cache@v2
       - name: Create frontend build placeholder
         run: mkdir -p frontend/build && echo '<html><body>placeholder</body></html>' > frontend/build/index.html
@@ -29,6 +31,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
+          toolchain: stable
           components: clippy
       - uses: Swatinem/rust-cache@v2
       - name: Create frontend build placeholder
@@ -42,6 +45,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
+          toolchain: stable
           components: rustfmt
       - run: cargo fmt --all --check
 
@@ -54,6 +58,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
       - uses: Swatinem/rust-cache@v2
       - name: Create frontend build placeholder
         run: mkdir -p frontend/build && echo '<html><body>placeholder</body></html>' > frontend/build/index.html

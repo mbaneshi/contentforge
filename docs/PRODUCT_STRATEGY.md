@@ -3,7 +3,7 @@
 > **Date**: 2026-03-21
 > **Status**: Pre-launch
 > **Author**: Mehdi Baneshi
-> **Repo**: https://github.com/mbaneshi-labs/contentforge
+> **Repo**: https://github.com/mbaneshi/contentforge
 
 ---
 

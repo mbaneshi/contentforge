@@ -50,7 +50,7 @@ ContentForge is a Rust-native content creation and multi-platform publishing pla
 - 6 platform adapters
 - Pipeline automation
 
-GitHub: https://github.com/mbaneshi-labs/contentforge
+GitHub: https://github.com/mbaneshi/contentforge
 
 (This post was published via ContentForge CLI — testing in progress, will be deleted shortly.)" \
   --tags "test,contentforge,rust" \

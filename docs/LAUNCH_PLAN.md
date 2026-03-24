@@ -71,7 +71,7 @@ claude mcp add contentforge -- /Users/bm/contentforge/target/release/contentforg
 - Sections: hero, features, platforms, pricing, install, FAQ
 
 ### Option B: Use the docs site (free, already deployed)
-- mbaneshi-labs.github.io/contentforge already works
+- mbaneshi.github.io/contentforge already works
 - Add pricing section + Stripe checkout link
 - Custom domain later
 
@@ -111,7 +111,7 @@ CTA:
   [Get Started — Free] [Upgrade to Pro]
 ```
 
-**Deliverable**: Landing page live at contentforge.dev or mbaneshi-labs.github.io/contentforge.
+**Deliverable**: Landing page live at contentforge.dev or mbaneshi.github.io/contentforge.
 
 ---
 
@@ -180,7 +180,7 @@ Use `mcp-manifest.json` (already created) as the submission source.
 ### Day 7: Homebrew Tap
 ```bash
 # Create the tap repo
-gh repo create mbaneshi-labs/homebrew-tap --public
+gh repo create mbaneshi/homebrew-tap --public
 
 # Create formula (after first GitHub release)
 # The release workflow already handles updating the formula
@@ -218,7 +218,7 @@ Key differentiators:
 
 Free and open source (MIT). Pro tier ($9/mo) for automation.
 
-GitHub: https://github.com/mbaneshi-labs/contentforge
+GitHub: https://github.com/mbaneshi/contentforge
 Install: curl -fsSL ... | bash
 
 Happy to answer questions about the Rust architecture

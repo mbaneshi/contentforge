@@ -4,7 +4,7 @@
 Rust-native, single-binary content creation and multi-platform publishing platform. Draft, adapt, schedule, and publish to every platform from CLI, TUI, Web UI, or AI assistant (via MCP).
 
 ## Key Facts
-- **Repo**: https://github.com/mbaneshi-labs/contentforge
+- **Repo**: https://github.com/mbaneshi/contentforge
 - **Local**: `/Users/bm/contentforge/`
 - **Version**: v0.1.0 (pre-launch)
 - **Stack**: Rust (11 crates) + SvelteKit 5 + SQLite

@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/mbaneshi-labs/contentforge/actions/workflows/ci.yml"><img src="https://github.com/mbaneshi-labs/contentforge/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/mbaneshi/contentforge/actions/workflows/ci.yml"><img src="https://github.com/mbaneshi/contentforge/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <img src="https://img.shields.io/badge/rust-1.80%2B-orange.svg" alt="Rust 1.80+">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
   <img src="https://img.shields.io/badge/platforms-6-brightgreen.svg" alt="6 Platforms">
@@ -47,13 +47,13 @@ contentforge pipeline run <id> --platforms devto,mastodon,bluesky --skip-review
 
 ```bash
 # From source (recommended for now)
-git clone https://github.com/mbaneshi-labs/contentforge.git
+git clone https://github.com/mbaneshi/contentforge.git
 cd contentforge
 cargo build --release
 # Binary: target/release/contentforge
 
 # Or via the install script
-curl -fsSL https://raw.githubusercontent.com/mbaneshi-labs/contentforge/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/mbaneshi/contentforge/main/install.sh | bash
 ```
 
 ### First Content Piece (2 minutes)
@@ -188,7 +188,7 @@ contentforge (single binary)
 - [Product Strategy](docs/PRODUCT_STRATEGY.md) — vision, pricing, go-to-market
 - [Build Plan](docs/BUILD_PLAN.md) — prioritized implementation plan
 - [Architecture](docs/architecture/ARCHITECTURE.md) — system design deep-dive
-- [Full Docs Site](https://mbaneshi-labs.github.io/contentforge/) — guides and reference
+- [Full Docs Site](https://mbaneshi.github.io/contentforge/) — guides and reference
 
 ## Contributing
 

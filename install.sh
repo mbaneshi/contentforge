@@ -2,9 +2,9 @@
 set -euo pipefail
 
 # ContentForge installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/mbaneshi-labs/contentforge/main/install.sh | bash
+# Usage: curl -fsSL https://raw.githubusercontent.com/mbaneshi/contentforge/main/install.sh | bash
 
-REPO="mbaneshi-labs/contentforge"
+REPO="mbaneshi/contentforge"
 BINARY="contentforge"
 INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
 

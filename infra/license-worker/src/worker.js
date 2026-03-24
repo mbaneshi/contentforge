@@ -140,7 +140,7 @@ async function sendLicenseEmail(env, email, licenseKey) {
           <li>Approval workflows</li>
           <li>Encrypted credential store</li>
         </ul>
-        <p>Questions? Reply to this email or open an issue on <a href="https://github.com/mbaneshi-labs/contentforge">GitHub</a>.</p>
+        <p>Questions? Reply to this email or open an issue on <a href="https://github.com/mbaneshi/contentforge">GitHub</a>.</p>
       `,
     }),
   });

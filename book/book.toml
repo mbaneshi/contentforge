@@ -1,0 +1,10 @@
+[book]
+title = "ContentForge"
+authors = ["Mehdi Baneshi"]
+description = "A Rust-native content creation and multi-platform publishing platform"
+language = "en"
+src = "src"
+
+[output.html]
+git-repository-url = "https://github.com/mbaneshi/contentforge"
+edit-url-template = "https://github.com/mbaneshi/contentforge/edit/main/book/src/{path}"
